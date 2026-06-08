@@ -11,7 +11,12 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 
 ## Repository Contents
 
+- `.gitignore` - local secrets, logs, coverage, and generated-output ignores
+- `CHANGES.md` - baseline change log
+- `Makefile` - local verification entry point
 - `README.md` - project overview and local usage notes
+- `go.mod` - Go module metadata for `github.com/paulmach/orb`
+- `go.sum` - Go dependency checksums
 - `clip` - source or example code
 - `encoding` - source or example code
 - `geo` - source or example code
@@ -22,7 +27,9 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `project` - source or example code
 - `quadtree` - source or example code
 - `resample` - source or example code
+- `scripts/check-baseline.py` - static baseline checks used by `make check`
 - `SECURITY.md` - security reporting and disclosure guidance
+- `docs/plans/2026-06-08-orb-go-module-baseline.md` - completed module hardening plan
 
 Additional scan context:
 
@@ -36,23 +43,31 @@ Additional scan context:
 ### Prerequisites
 
 - Git
+- Go 1.20 or newer
 
 ### Setup
 
 ```bash
 git clone https://github.com/garethpaul/orb.git
 cd orb
+make check
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
 
 ## Running or Using the Project
 
-- No single runtime entry point was identified. Start by reading the source files and manifests listed above.
+- Import packages using the module path `github.com/paulmach/orb`.
+- This repository is a library, not a standalone service. Start with the package
+  READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
+- Run `make check` before changing geometry algorithms, encoders, generated
+  protobuf code, or fixture data.
 
 ## Testing and Verification
 
-- No dedicated automated test command was identified from the checked-in files. Verify changes by running the relevant build or manually exercising the sample.
+- `make check`
+- `go test ./...`
+- `python3 scripts/check-baseline.py`
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -65,9 +80,16 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include LICENSE.md, clip/clip.go, encoding/mvt/clip.go, encoding/mvt/layer.go, and 1 more.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include encoding/mvt/geometry.go, encoding/mvt/geometry_test.go, encoding/mvt/marshal_test.go, encoding/mvt/vectortile/vector_tile.pb.go, and 6 more.
 - Review changes touching database, model, or persistence code; examples from the scan include encoding/wkb/scanner.go.
+- Mapbox Vector Tile support depends on generated protobuf code under
+  `encoding/mvt/vectortile`; keep the `.proto`, generated `.pb.go`, and tests
+  in sync.
 
 ## Maintenance Notes
 
+- The Go module path is `github.com/paulmach/orb`, matching the imports already
+  used throughout the source tree.
+- See `CHANGES.md` and `docs/plans/2026-06-08-orb-go-module-baseline.md` for
+  the current module baseline.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 

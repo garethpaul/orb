@@ -14,6 +14,10 @@ geometry encodings.
 The goal is to keep the core types idiomatic, stable, and easy to compose while
 maintaining correctness across geographic and planar operations.
 
+Current baseline: `make check` runs `go test ./...` through the Go module
+`github.com/paulmach/orb` and verifies the generated Mapbox Vector Tile source
+and fixture set remain present.
+
 The current focus is:
 
 Priority:
@@ -22,6 +26,7 @@ Priority:
 - Keep geo and planar behavior separated by package
 - Maintain test coverage for geometry equality, bounds, encoding, and algorithms
 - Keep package READMEs aligned with actual APIs
+- Keep Go module metadata and dependency checksums current
 
 Next priorities:
 

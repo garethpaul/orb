@@ -30,7 +30,8 @@ Helpful reports include:
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
-- No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
+- Dependency manifests detected: go.mod, go.sum. Dependency updates should keep
+  module checksums in sync and preserve repeatable `go test ./...` behavior.
 
 ## Service and API Notes
 
@@ -39,6 +40,11 @@ For web services, APIs, sockets, or scraping workflows, prioritize reports invol
 ## Dependency and Supply Chain Security
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
+
+For this geometry library, also review malformed GeoJSON, WKB/WKT, and Mapbox
+Vector Tile inputs for panics, excessive allocation, coordinate-order mistakes,
+and projection edge cases. Run `make check` and `go test ./...` before changing
+parsers, encoders, generated protobuf code, or fixture data.
 
 ## Safe Research Guidelines
 
