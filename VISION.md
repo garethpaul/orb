@@ -40,7 +40,7 @@ Geometry libraries are often used in data pipelines. Contributions should avoid
 panic-prone parsing, unbounded memory growth on malformed inputs, and ambiguous
 coordinate handling.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Breaking core type changes without a migration plan
 - Algorithm rewrites without fixtures and benchmarks
