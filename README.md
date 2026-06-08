@@ -1,152 +1,80 @@
 # orb
 
-<!-- README-OVERVIEW-IMAGE -->
-![Project overview](docs/readme-overview.svg)
+## Overview
 
-Package `orb` defines a set of types for working with 2d geo and planar/projected geometric data in Golang.
-There are a set of sub-packages that use these types to do interesting things.
-They each provider their own README with extra info.
+`garethpaul/orb` is a Go project. No GitHub description is currently set.
 
-## Interesting features
+This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: Go (88).
 
-* **Simple types** - allow for natural operations using the `make`, `append`, `len`, `[s:e]` builtins.
-* **GeoJSON** - support as part of the [`geojson`](geojson) sub-package.
-* **Mapbox Vector Tile** - encoding and decoding as part of the [`encoding/mvt`](encoding/mvt) sub-package.
-* **Direct to type from DB query results** - by scanning WKB data directly into types.
-* **Rich set of sub-packages** - including [`clipping`](clip), [`simplifing`](simplify), [`quadtree`](quadtree) and more.
+## Repository Contents
 
-## Type definitions
+- `README.md` - project overview and local usage notes
+- `clip` - source or example code
+- `encoding` - source or example code
+- `geo` - source or example code
+- `geojson` - source or example code
+- `internal` - source or example code
+- `maptile` - source or example code
+- `planar` - source or example code
+- `project` - source or example code
+- `quadtree` - source or example code
+- `resample` - source or example code
+- `SECURITY.md` - security reporting and disclosure guidance
 
-	type Point [2]float64
-	type MultiPoint []Point
+Additional scan context:
 
-	type LineString []Point
-	type MultiLineString []LineString
+- Source directories: clip, encoding, geo, geojson, internal, maptile, and 4 more
+- Dependency and build manifests: none detected
+- Entry points or build surfaces: none detected
+- Test-looking files: bound_test.go, clip/clip_test.go, clip/example_test.go, clip/helpers_test.go, clip/smartclip/around_bound_test.go, clip/smartclip/smart_test.go, clip/smartclip/util_test.go, clone_test.go, and 4 more
 
-	type Ring LineString
-	type Polygon []Ring
-	type MultiPolygon []Polygon
+## Getting Started
 
-	type Collection []Geometry
+### Prerequisites
 
-	type Bound struct { Min, Max Point }
+- Git
 
-Defining the types as slices allows them to be accessed in an idiomatic way
-using Go's built-in functions such at `make`, `append`, `len`
-and with slice notation like `[s:e]`. For example:
+### Setup
 
-	ls := make(orb.LineString, 0, 100)
-	ls = append(ls, orb.Point{1, 1})
-	point := ls[0]
+```bash
+git clone https://github.com/garethpaul/orb.git
+cd orb
+```
 
-### Shared `Geometry` interface
+The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
 
-All of the base types implement the `orb.Geometry` interface defined as:
+## Running or Using the Project
 
-	type Geometry interface {
-		GeoJSONType() string
-		Dimensions() int // e.g. 0d, 1d, 2d
-		Bound() Bound
-	}
+- No single runtime entry point was identified. Start by reading the source files and manifests listed above.
 
-This interface is accepted by functions in the sub-packages which then act on the
-base types correctly. For example:
+## Testing and Verification
 
-	l := clip.Geometry(bound, geom)
+- No dedicated automated test command was identified from the checked-in files. Verify changes by running the relevant build or manually exercising the sample.
 
-will use the appropriate clipping algorithm depending on if the input is 1d or 2d,
-e.g. a `orb.LineString` or a `orb.Polygon`.
+When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
-Only a few methods are defined directly on these type, for example `Clone`, `Equal`, `GeoJSONType`.
-Other operation that depend on geo vs. planar contexts are defined in the respective sub-package.
-For example:
+## Configuration and Secrets
 
-* Computing the geo distance between two point:
+- Detected references to Mapbox. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 
-		p1 := orb.Point{-72.796408, -45.407131}
-		p2 := orb.Point{-72.688541, -45.384987}
+## Security and Privacy Notes
 
-		geo.Distance(p1, p2)
+- Review changes touching network requests, sockets, or service endpoints; examples from the scan include LICENSE.md, clip/clip.go, encoding/mvt/clip.go, encoding/mvt/layer.go, and 1 more.
+- Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include encoding/mvt/geometry.go, encoding/mvt/geometry_test.go, encoding/mvt/marshal_test.go, encoding/mvt/vectortile/vector_tile.pb.go, and 6 more.
+- Review changes touching database, model, or persistence code; examples from the scan include encoding/wkb/scanner.go.
 
-* Compute the planar area and centroid of a polygon:
+## Maintenance Notes
 
-		poly := orb.Polygon{...}
-		centroid, area := planar.CentroidArea(poly)
+- See `SECURITY.md` for vulnerability reporting and safe research guidance.
+- See `VISION.md` for project direction and contribution guardrails.
 
-## GeoJSON
+## Contributing
 
-The [geojson](geojson) sub-package implements Marshalling and Unmarshalling of GeoJSON data.
-Features are defined as:
+Keep changes small and tied to the project that is already present in this repository. For code changes, document the toolchain used, avoid committing generated dependency directories or local configuration, and update this README when setup or verification steps change.
 
-	type Feature struct {
-		ID         interface{}  `json:"id,omitempty"`
-		Type       string       `json:"type"`
-		Geometry   orb.Geometry `json:"geometry"`
-		Properties Properties   `json:"properties"`
-	}
+## Existing Project Notes
 
-Defining the geometry as an `orb.Geometry` interface along with sub-package functions
-accepting geometries allows them to work together to create easy to follow code.
-For example, clipping all the geometries in a collection:
+Prior README summary:
 
-	fc, err := geojson.UnmarshalFeatureCollection(data)
-	for _, f := range fc {
-		f.Geometry = clip.Geometry(bound, f.Geometry)
-	}
+> orb <!-- README-OVERVIEW-IMAGE --> Package `orb` defines a set of types for working with 2d geo and planar/projected geometric data in Golang. There are a set of sub-packages that use these types to do interesting things. They each provider their own README with extra info. Interesting features * **Simple types** - allow for natural operations using the `make`, `append`, `len`, `[s:e]` builtins.
 
-## Mapbox Vector Tiles
-
-The [encoding/mvt](encoding/mvt) sub-package implements Marshalling and
-Unmarshalling [MVT](https://www.mapbox.com/vector-tiles/) data.
-This package uses sets of `geojson.FeatureCollection` to define the layers,
-keyed by the layer name. For example:
-
-	collections := map[string]*geojson.FeatureCollection{}
-
-	// Convert to a layers object and project to tile coordinates.
-	layers := mvt.NewLayers(collections)
-	layers.ProjectToTile(maptile.New(x, y, z))
-
-    // In order to be used as source for MapboxGL geometries need to be clipped
-    // to max allowed extent. (uncomment next line)
-    // layers.Clip(mvt.MapboxGLDefaultExtentBound)
-
-	// Simplify the geometry now that it's in tile coordinate space.
-	layers.Simplify(simplify.DouglasPeucker(1.0))
-
-	// Depending on use-case remove empty geometry, those too small to be
-	// represented in this tile space.
-	// In this case lines shorter than 1, and areas smaller than 2.
-	layers.RemoveEmpty(1.0, 2.0)
-
-	// encoding using the Mapbox Vector Tile protobuf encoding.
-	data, err := layers.Marshal() // this data is NOT gzipped.
-
-	// Sometimes MVT data is stored and transfered gzip compressed. In that case:
-	data, err := layers.MarshalGzipped()
-
-## Decoding WKB from a database query
-
-Geometries are usually returned from databases in WKB format. The [encoding/wkb](encoding/wkb)
-sub-package offers helpers to "scan" the data into the base types directly.
-For example:
-
-	row := db.QueryRow("SELECT ST_AsBinary(point_column) FROM postgis_table")
-
-	var p orb.Point
-	err := row.Scan(wkb.Scanner(&p))
-
-	db.Exec("INSERT INTO table (point_column) VALUES (ST_GeomFromWKB(?))", wkb.Value(p))
-
-## List of sub-package utilities
-
-* [`clip`](clip) - clipping geometry to a bounding box
-* [`encoding/mvt`](encoding/mvt) - encoded and decoding from [Mapbox Vector Tiles](https://www.mapbox.com/vector-tiles/)
-* [`encoding/wkb`](encoding/wkb) - well-known binary as well as helpers to decode from the database queries
-* [`encoding/wkt`](encoding/wkt) - well-known text encoding
-* [`geojson`](geojson) - working with geojson and the types in this package
-* [`maptile`](maptile) - working with mercator map tiles
-* [`project`](project) - project geometries between geo and planar contexts
-* [`quadtree`](quadtree) - quadtree implementation using the types in this package
-* [`resample`](resample) - resample points in a line string geometry
-* [`simplify`](simplify) - linear geometry simplifications like Douglas-Peucker
