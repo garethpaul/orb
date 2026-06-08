@@ -23,6 +23,8 @@ resampling, simplification, and Mapbox Vector Tile encoding.
 - Pinned the external dependencies already used by the code:
   `github.com/gogo/protobuf` and `github.com/pkg/errors`.
 - Added `make check`, `make test`, and static baseline checks.
+- Added `go vet ./...` to `make check` so parser, encoder, and geometry helper
+  changes get a standard Go static pass.
 - Added ignore rules for local secrets, logs, Go test binaries, coverage
   output, and temporary build artifacts.
 - Documented the module path, fixture expectations, and verification workflow.
@@ -30,6 +32,7 @@ resampling, simplification, and Mapbox Vector Tile encoding.
 ## Verification
 
 - `go test ./...`
+- `go vet ./...`
 - `make check`
 - `python3 scripts/check-baseline.py`
 - `git diff --check`

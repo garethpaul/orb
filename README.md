@@ -67,6 +67,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - `make check`
 - `go test ./...`
+- `go vet ./...`
 - `python3 scripts/check-baseline.py`
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

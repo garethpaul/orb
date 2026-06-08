@@ -1,9 +1,12 @@
-.PHONY: check test static-check
+.PHONY: check static-check test vet
 
-check: test static-check
+check: test vet static-check
 
 test:
 	go test ./...
+
+vet:
+	go vet ./...
 
 static-check:
 	python3 scripts/check-baseline.py

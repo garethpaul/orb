@@ -49,7 +49,7 @@ def main():
             failures.append(f"go.sum must include {phrase}")
 
     makefile = read("Makefile")
-    for phrase in ["go test ./...", "python3 scripts/check-baseline.py", "check: test static-check"]:
+    for phrase in ["go test ./...", "go vet ./...", "python3 scripts/check-baseline.py", "check: test vet static-check"]:
         if phrase not in makefile:
             failures.append(f"Makefile must include {phrase}")
 
@@ -75,6 +75,7 @@ def main():
     for phrase in [
         "make check",
         "go test ./...",
+        "go vet ./...",
         "github.com/paulmach/orb",
         "Go module",
         "Mapbox Vector Tile",
@@ -83,7 +84,7 @@ def main():
             failures.append(f"docs must mention {phrase}")
 
     plan = read(PLAN)
-    if "status: completed" not in plan or "go test ./..." not in plan:
+    if "status: completed" not in plan or "go test ./..." not in plan or "go vet ./..." not in plan:
         failures.append("plan must record completed status and Go verification")
 
     try:
