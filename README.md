@@ -2,7 +2,7 @@
 
 ## Overview
 
-`garethpaul/orb` is a Go project. No GitHub description is currently set.
+`garethpaul/orb` is a Go project. The checked-in files describe a Go project with the structure summarized below.
 
 This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: Go (88).
 
@@ -71,10 +71,4 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Contributing
 
 Keep changes small and tied to the project that is already present in this repository. For code changes, document the toolchain used, avoid committing generated dependency directories or local configuration, and update this README when setup or verification steps change.
-
-## Existing Project Notes
-
-Prior README summary:
-
-> orb <!-- README-OVERVIEW-IMAGE --> Package `orb` defines a set of types for working with 2d geo and planar/projected geometric data in Golang. There are a set of sub-packages that use these types to do interesting things. They each provider their own README with extra info. Interesting features * **Simple types** - allow for natural operations using the `make`, `append`, `len`, `[s:e]` builtins.
 
