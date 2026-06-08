@@ -1,5 +1,8 @@
 ## Orb Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 Orb is a Go geometry library for working with two-dimensional geographic and
 planar data.
 
