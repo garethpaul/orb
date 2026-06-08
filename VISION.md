@@ -40,7 +40,6 @@ Canonical security policy and reporting:
 
 - [`SECURITY.md`](SECURITY.md)
 
-
 Geometry libraries are often used in data pipelines. Contributions should avoid
 panic-prone parsing, unbounded memory growth on malformed inputs, and ambiguous
 coordinate handling.
