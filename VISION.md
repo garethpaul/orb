@@ -46,3 +46,6 @@ coordinate handling.
 - Algorithm rewrites without fixtures and benchmarks
 - Hidden global state in geometry operations
 - Encoding behavior that silently changes coordinate semantics
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
