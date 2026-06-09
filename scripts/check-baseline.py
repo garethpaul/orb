@@ -23,6 +23,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-empty-linestring-reverse.md",
     "docs/plans/2026-06-09-collection-dimensions-nil.md",
     "docs/plans/2026-06-09-empty-bound-union.md",
+    "docs/plans/2026-06-09-simplify-empty-multipolygon.md",
     "scripts/check-baseline.py",
 ]
 
@@ -109,6 +110,12 @@ def main():
         failures.append("bound tests must cover empty receiver union")
     if "TestMultiLineString_BoundSkipsLeadingEmptyLineString" not in multi_line_tests:
         failures.append("multi line string tests must cover leading empty bounds")
+    simplify_helpers = read("simplify/helpers.go")
+    simplify_tests = read("simplify/helpers_test.go")
+    if "len(p) == 0" not in simplify_helpers or "len(p[0]) <= 2" not in simplify_helpers:
+        failures.append("simplify multiPolygon must skip empty polygons before indexing")
+    if "TestMultiPolygonSkipsEmptyPolygon" not in simplify_tests:
+        failures.append("simplify tests must cover empty polygons inside multipolygons")
 
     docs = "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md"])
     for phrase in [
@@ -122,6 +129,7 @@ def main():
         "empty line strings",
         "nil geometries",
         "empty bounds",
+        "empty polygons inside multipolygons",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -141,6 +149,9 @@ def main():
     empty_bound_plan = read("docs/plans/2026-06-09-empty-bound-union.md")
     if "status: completed" not in empty_bound_plan or "Bound.Union" not in empty_bound_plan:
         failures.append("empty bound union plan must record completed status and verification")
+    simplify_plan = read("docs/plans/2026-06-09-simplify-empty-multipolygon.md")
+    if "status: completed" not in simplify_plan or "multiPolygon" not in simplify_plan:
+        failures.append("simplify empty multipolygon plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

@@ -69,6 +69,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   the same empty dimension result.
 - `Bound.Union` treats an empty receiver as identity so aggregate bounds do not
   inherit the empty bound sentinel.
+- Simplification skips empty polygons inside multipolygons without panicking.
 
 ## Testing and Verification
 
@@ -96,6 +97,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Empty line strings should remain safe for helper methods such as reverse.
 - Nil geometries inside collections should be ignored by aggregate helpers.
 - Empty bounds should remain identity values in bound union helpers.
+- Empty polygons inside multipolygons should be skipped by simplification
+  helpers instead of panicking.
 
 ## Maintenance Notes
 

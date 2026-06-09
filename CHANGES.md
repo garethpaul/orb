@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-06-09
+
+- Made multipolygon simplification skip empty polygon entries without panicking.
+
 ## 2026-06-08
 
 - Added a Go module for the existing `github.com/paulmach/orb` import path.

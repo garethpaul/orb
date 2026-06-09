@@ -96,7 +96,7 @@ func multiPolygon(s simplifier, mp orb.MultiPolygon) orb.MultiPolygon {
 	count := 0
 	for i := range mp {
 		p := polygon(s, mp[i])
-		if len(p[0]) <= 2 {
+		if len(p) == 0 || len(p[0]) <= 2 {
 			continue
 		}
 

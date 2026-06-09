@@ -51,6 +51,8 @@ Empty line strings should also remain panic-resistant in helper methods such as
 reverse.
 Empty bounds should remain identity values when aggregate helpers union child
 geometry bounds.
+Empty polygons inside multipolygons should remain panic-resistant in
+simplification helpers.
 
 ## Safe Research Guidelines
 

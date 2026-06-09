@@ -36,3 +36,15 @@ func TestMultiPolygon(t *testing.T) {
 		t.Errorf("should remove empty polygon")
 	}
 }
+
+func TestMultiPolygonSkipsEmptyPolygon(t *testing.T) {
+	mp := orb.MultiPolygon{
+		{},
+		{{{0, 0}, {1, 0}, {1, 1}, {0, 0}}},
+	}
+
+	mp = DouglasPeucker(0).MultiPolygon(mp)
+	if len(mp) != 1 {
+		t.Errorf("should skip empty polygon without panicking")
+	}
+}
