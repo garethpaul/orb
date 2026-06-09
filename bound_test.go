@@ -39,6 +39,14 @@ func TestBoundUnionWithEmptyReceiver(t *testing.T) {
 	}
 }
 
+func TestBoundUnionWithEmptyArgument(t *testing.T) {
+	bound := Bound{Min: Point{10, 10}, Max: Point{12, 12}}
+
+	if b := bound.Union(emptyBound); !b.Equal(bound) {
+		t.Errorf("empty argument should preserve receiver bound: %v != %v", b, bound)
+	}
+}
+
 func TestBoundContains(t *testing.T) {
 	bound := Bound{Min: Point{-2, -1}, Max: Point{2, 1}}
 

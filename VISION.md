@@ -33,7 +33,8 @@ Priority:
 - Keep degenerate rings and malformed geometry inputs panic-resistant
 - Keep empty line strings safe in core helper methods
 - Keep nil geometries in collections safe for aggregate helpers
-- Keep empty bounds safe as identity values in aggregate helpers
+- Keep empty bounds and empty union arguments safe as identity values in
+  aggregate helpers
 - Keep empty polygons inside multipolygons safe in simplification helpers
 - Keep empty rings and polygons safe in planar containment helpers
 

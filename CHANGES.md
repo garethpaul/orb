@@ -4,6 +4,8 @@
 
 - Made planar containment helpers treat empty rings and polygons as
   non-containing inputs instead of panicking.
+- Covered `Bound.Union` empty argument behavior so empty bounds stay identity
+  values on both sides of union operations.
 - Added stable Make aliases for lint, build-through-test, and verify gates.
 - Made multipolygon simplification skip empty polygon entries without panicking.
 

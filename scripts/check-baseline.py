@@ -23,6 +23,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-empty-linestring-reverse.md",
     "docs/plans/2026-06-09-collection-dimensions-nil.md",
     "docs/plans/2026-06-09-empty-bound-union.md",
+    "docs/plans/2026-06-09-empty-bound-union-argument.md",
     "docs/plans/2026-06-09-simplify-empty-multipolygon.md",
     "docs/plans/2026-06-09-make-gate-aliases.md",
     "docs/plans/2026-06-09-planar-empty-containment.md",
@@ -118,6 +119,8 @@ def main():
         failures.append("Bound.Union must return the other bound when the receiver is empty")
     if "TestBoundUnionWithEmptyReceiver" not in bound_tests:
         failures.append("bound tests must cover empty receiver union")
+    if "TestBoundUnionWithEmptyArgument" not in bound_tests:
+        failures.append("bound tests must cover empty argument union")
     if "TestMultiLineString_BoundSkipsLeadingEmptyLineString" not in multi_line_tests:
         failures.append("multi line string tests must cover leading empty bounds")
     simplify_helpers = read("simplify/helpers.go")
@@ -153,6 +156,7 @@ def main():
         "empty line strings",
         "nil geometries",
         "empty bounds",
+        "empty union arguments",
         "empty polygons inside multipolygons",
         "empty rings and polygons",
     ]:
@@ -174,6 +178,13 @@ def main():
     empty_bound_plan = read("docs/plans/2026-06-09-empty-bound-union.md")
     if "status: completed" not in empty_bound_plan or "Bound.Union" not in empty_bound_plan:
         failures.append("empty bound union plan must record completed status and verification")
+    empty_bound_argument_plan = read("docs/plans/2026-06-09-empty-bound-union-argument.md")
+    if (
+        "status: completed" not in empty_bound_argument_plan
+        or "Bound.Union" not in empty_bound_argument_plan
+        or "empty argument" not in empty_bound_argument_plan
+    ):
+        failures.append("empty bound union argument plan must record completed status and verification")
     simplify_plan = read("docs/plans/2026-06-09-simplify-empty-multipolygon.md")
     if "status: completed" not in simplify_plan or "multiPolygon" not in simplify_plan:
         failures.append("simplify empty multipolygon plan must record completed status and verification")

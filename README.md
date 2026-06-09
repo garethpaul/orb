@@ -69,8 +69,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `LineString.Reverse` handles empty line strings without panicking.
 - `Collection.Dimensions` skips nil geometries and keeps all-nil collections at
   the same empty dimension result.
-- `Bound.Union` treats an empty receiver as identity so aggregate bounds do not
-  inherit the empty bound sentinel.
+- `Bound.Union` treats empty receiver bounds and empty union arguments as
+  identity values so aggregate bounds do not inherit the empty bound sentinel.
 - Simplification skips empty polygons inside multipolygons without panicking.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
