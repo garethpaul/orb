@@ -45,6 +45,8 @@ For this geometry library, also review malformed GeoJSON, WKB/WKT, and Mapbox
 Vector Tile inputs for panics, excessive allocation, coordinate-order mistakes,
 and projection edge cases. Run `make check` and `go test ./...` before changing
 parsers, encoders, generated protobuf code, or fixture data.
+Degenerate rings should remain panic-resistant because geometry libraries are
+often used in data pipelines that receive malformed input.
 
 ## Safe Research Guidelines
 

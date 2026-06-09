@@ -11,6 +11,16 @@ func TestRing_Closed(t *testing.T) {
 		closed bool
 	}{
 		{
+			name:   "empty ring is not closed",
+			ring:   Ring{},
+			closed: false,
+		},
+		{
+			name:   "one point ring is not closed",
+			ring:   Ring{{3, 0}},
+			closed: false,
+		},
+		{
 			name:   "first must equal last",
 			ring:   Ring{{0, 0}, {3, 0}, {3, 4}, {0, 0}},
 			closed: true,
@@ -21,9 +31,9 @@ func TestRing_Closed(t *testing.T) {
 			closed: false,
 		},
 		{
-			name:   "length of ring doesn't matter",
+			name:   "too-short ring is not closed even when endpoints match",
 			ring:   Ring{{3, 0}, {3, 0}},
-			closed: true,
+			closed: false,
 		},
 	}
 
@@ -31,6 +41,38 @@ func TestRing_Closed(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if v := tc.ring.Closed(); v != tc.closed {
 				t.Errorf("incorrect: %v != %v", v, tc.closed)
+			}
+		})
+	}
+}
+
+func TestRing_OrientationDegenerate(t *testing.T) {
+	cases := []struct {
+		name string
+		ring Ring
+	}{
+		{
+			name: "empty ring",
+			ring: Ring{},
+		},
+		{
+			name: "one point ring",
+			ring: Ring{{0, 0}},
+		},
+		{
+			name: "two point ring",
+			ring: Ring{{0, 0}, {1, 1}},
+		},
+		{
+			name: "collinear ring",
+			ring: Ring{{0, 0}, {1, 1}, {2, 2}},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if val := tc.ring.Orientation(); val != 0 {
+				t.Errorf("degenerate ring should have zero orientation: %v", val)
 			}
 		})
 	}

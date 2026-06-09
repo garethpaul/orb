@@ -17,6 +17,10 @@ func (r Ring) Dimensions() int {
 // ie. 4+ points and the first and last points match.
 // NOTE: this will not check for self-intersection.
 func (r Ring) Closed() bool {
+	if len(r) < 4 {
+		return false
+	}
+
 	// first must equal last
 	return r[0] == r[len(r)-1]
 }
@@ -36,6 +40,10 @@ func (r Ring) Bound() Bound {
 // return -1 if the ring is the clockwise order and 0 if the ring is
 // degenerate and had no area.
 func (r Ring) Orientation() Orientation {
+	if len(r) < 3 {
+		return 0
+	}
+
 	area := 0.0
 
 	// This is a fast planar area computation, which is okay for this use.

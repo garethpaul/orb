@@ -62,6 +62,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
 - Run `make check` before changing geometry algorithms, encoders, generated
   protobuf code, or fixture data.
+- Core ring helpers treat degenerate rings as non-closed or zero-orientation
+  inputs instead of panicking.
 
 ## Testing and Verification
 
@@ -84,6 +86,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Mapbox Vector Tile support depends on generated protobuf code under
   `encoding/mvt/vectortile`; keep the `.proto`, generated `.pb.go`, and tests
   in sync.
+- Degenerate rings and malformed geometry inputs should fail predictably rather
+  than panic in caller pipelines.
 
 ## Maintenance Notes
 

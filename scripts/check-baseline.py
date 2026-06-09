@@ -19,6 +19,7 @@ REQUIRED = [
     "go.mod",
     "go.sum",
     PLAN,
+    "docs/plans/2026-06-09-degenerate-ring-guards.md",
     "scripts/check-baseline.py",
 ]
 
@@ -71,6 +72,20 @@ def main():
     if testdata_count < 300:
         failures.append("tilecover testdata fixture set unexpectedly small")
 
+    ring = read("ring.go")
+    for phrase in ["if len(r) < 4", "if len(r) < 3"]:
+        if phrase not in ring:
+            failures.append(f"ring.go must guard degenerate rings with {phrase}")
+    ring_tests = read("ring_test.go")
+    for phrase in [
+        "empty ring is not closed",
+        "too-short ring is not closed even when endpoints match",
+        "TestRing_OrientationDegenerate",
+        "collinear ring",
+    ]:
+        if phrase not in ring_tests:
+            failures.append(f"ring tests must include {phrase}")
+
     docs = "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md"])
     for phrase in [
         "make check",
@@ -79,6 +94,7 @@ def main():
         "github.com/paulmach/orb",
         "Go module",
         "Mapbox Vector Tile",
+        "degenerate rings",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -86,6 +102,9 @@ def main():
     plan = read(PLAN)
     if "status: completed" not in plan or "go test ./..." not in plan or "go vet ./..." not in plan:
         failures.append("plan must record completed status and Go verification")
+    ring_plan = read("docs/plans/2026-06-09-degenerate-ring-guards.md")
+    if "status: completed" not in ring_plan or "go test ./..." not in ring_plan:
+        failures.append("ring guard plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

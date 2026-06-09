@@ -28,11 +28,13 @@ Priority:
 - Keep vet clean for parser, encoder, and geometry helper changes
 - Keep package READMEs aligned with actual APIs
 - Keep Go module metadata and dependency checksums current
+- Keep degenerate rings and malformed geometry inputs panic-resistant
 
 Next priorities:
 
 - Document supported Go versions and module expectations
 - Add regression fixtures for edge cases in clipping and simplification
+- Add more edge-case fixtures for empty and degenerate core geometries
 - Keep encoding packages explicit about coordinate order and projection context
 - Review benchmark coverage for geometry-heavy operations
 
