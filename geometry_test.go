@@ -30,6 +30,38 @@ func TestGeometryDimensions(t *testing.T) {
 	}
 }
 
+func TestCollectionDimensionsSkipsNilGeometries(t *testing.T) {
+	cases := []struct {
+		name       string
+		collection Collection
+		dimensions int
+	}{
+		{
+			name:       "nil geometry collection dimensions",
+			collection: Collection{nil},
+			dimensions: -1,
+		},
+		{
+			name:       "nil geometry before point",
+			collection: Collection{nil, Point{}},
+			dimensions: 0,
+		},
+		{
+			name:       "nil geometry between higher dimensions",
+			collection: Collection{LineString{}, nil, Polygon{}},
+			dimensions: 2,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if v := tc.collection.Dimensions(); v != tc.dimensions {
+				t.Errorf("incorrect dimensions: %v != %v", v, tc.dimensions)
+			}
+		})
+	}
+}
+
 func TestCollectionBound(t *testing.T) {
 	// from the empty Point we get the zero bound.
 	expected := Bound{}

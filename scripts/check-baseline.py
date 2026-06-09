@@ -21,6 +21,7 @@ REQUIRED = [
     PLAN,
     "docs/plans/2026-06-09-degenerate-ring-guards.md",
     "docs/plans/2026-06-09-empty-linestring-reverse.md",
+    "docs/plans/2026-06-09-collection-dimensions-nil.md",
     "scripts/check-baseline.py",
 ]
 
@@ -83,6 +84,12 @@ def main():
     line_string_tests = read("line_string_test.go")
     if "empty line string" not in line_string_tests:
         failures.append("line string tests must cover empty reverse")
+    geometry = read("geometry.go")
+    geometry_tests = read("geometry_test.go")
+    if "if g == nil" not in geometry or "continue" not in geometry:
+        failures.append("Collection.Dimensions must skip nil geometries")
+    if "TestCollectionDimensionsSkipsNilGeometries" not in geometry_tests or "nil geometry collection dimensions" not in geometry_tests:
+        failures.append("geometry tests must cover nil collection dimensions")
     ring_tests = read("ring_test.go")
     for phrase in [
         "empty ring is not closed",
@@ -103,6 +110,7 @@ def main():
         "Mapbox Vector Tile",
         "degenerate rings",
         "empty line strings",
+        "nil geometries",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -116,6 +124,9 @@ def main():
     line_plan = read("docs/plans/2026-06-09-empty-linestring-reverse.md")
     if "status: completed" not in line_plan or "LineString.Reverse" not in line_plan:
         failures.append("line string plan must record completed status and verification")
+    collection_plan = read("docs/plans/2026-06-09-collection-dimensions-nil.md")
+    if "status: completed" not in collection_plan or "Collection.Dimensions" not in collection_plan:
+        failures.append("collection dimensions plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

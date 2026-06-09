@@ -30,6 +30,7 @@ Priority:
 - Keep Go module metadata and dependency checksums current
 - Keep degenerate rings and malformed geometry inputs panic-resistant
 - Keep empty line strings safe in core helper methods
+- Keep nil geometries in collections safe for aggregate helpers
 
 Next priorities:
 

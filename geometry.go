@@ -75,6 +75,9 @@ func (c Collection) GeoJSONType() string {
 func (c Collection) Dimensions() int {
 	max := -1
 	for _, g := range c {
+		if g == nil {
+			continue
+		}
 		if d := g.Dimensions(); d > max {
 			max = d
 		}

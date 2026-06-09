@@ -65,6 +65,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Core ring helpers treat degenerate rings as non-closed or zero-orientation
   inputs instead of panicking.
 - `LineString.Reverse` handles empty line strings without panicking.
+- `Collection.Dimensions` skips nil geometries and keeps all-nil collections at
+  the same empty dimension result.
 
 ## Testing and Verification
 
@@ -90,6 +92,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Degenerate rings and malformed geometry inputs should fail predictably rather
   than panic in caller pipelines.
 - Empty line strings should remain safe for helper methods such as reverse.
+- Nil geometries inside collections should be ignored by aggregate helpers.
 
 ## Maintenance Notes
 
