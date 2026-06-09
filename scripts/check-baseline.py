@@ -22,6 +22,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-degenerate-ring-guards.md",
     "docs/plans/2026-06-09-empty-linestring-reverse.md",
     "docs/plans/2026-06-09-collection-dimensions-nil.md",
+    "docs/plans/2026-06-09-empty-bound-union.md",
     "scripts/check-baseline.py",
 ]
 
@@ -99,6 +100,15 @@ def main():
     ]:
         if phrase not in ring_tests:
             failures.append(f"ring tests must include {phrase}")
+    bound = read("bound.go")
+    bound_tests = read("bound_test.go")
+    multi_line_tests = read("multi_line_string_test.go")
+    if "if b.IsEmpty()" not in bound or "return other" not in bound:
+        failures.append("Bound.Union must return the other bound when the receiver is empty")
+    if "TestBoundUnionWithEmptyReceiver" not in bound_tests:
+        failures.append("bound tests must cover empty receiver union")
+    if "TestMultiLineString_BoundSkipsLeadingEmptyLineString" not in multi_line_tests:
+        failures.append("multi line string tests must cover leading empty bounds")
 
     docs = "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md"])
     for phrase in [
@@ -111,6 +121,7 @@ def main():
         "degenerate rings",
         "empty line strings",
         "nil geometries",
+        "empty bounds",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -127,6 +138,9 @@ def main():
     collection_plan = read("docs/plans/2026-06-09-collection-dimensions-nil.md")
     if "status: completed" not in collection_plan or "Collection.Dimensions" not in collection_plan:
         failures.append("collection dimensions plan must record completed status and verification")
+    empty_bound_plan = read("docs/plans/2026-06-09-empty-bound-union.md")
+    if "status: completed" not in empty_bound_plan or "Bound.Union" not in empty_bound_plan:
+        failures.append("empty bound union plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

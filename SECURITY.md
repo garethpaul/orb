@@ -49,6 +49,8 @@ Degenerate rings should remain panic-resistant because geometry libraries are
 often used in data pipelines that receive malformed input.
 Empty line strings should also remain panic-resistant in helper methods such as
 reverse.
+Empty bounds should remain identity values when aggregate helpers union child
+geometry bounds.
 
 ## Safe Research Guidelines
 

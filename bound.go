@@ -8,6 +8,7 @@ var emptyBound = Bound{Min: Point{1, 1}, Max: Point{-1, -1}}
 
 // A Bound represents a closed box or rectangle.
 // To create a bound with two points you can do something like:
+//
 //	orb.MultiPoint{p1, p2}.Bound()
 type Bound struct {
 	Min, Max Point
@@ -61,6 +62,10 @@ func (b Bound) Extend(point Point) Bound {
 
 // Union extends this bound to contain the union of this and the given bound.
 func (b Bound) Union(other Bound) Bound {
+	if b.IsEmpty() {
+		return other
+	}
+
 	if other.IsEmpty() {
 		return b
 	}

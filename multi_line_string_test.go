@@ -15,6 +15,18 @@ func TestMultiLineString_Bound(t *testing.T) {
 	}
 }
 
+func TestMultiLineString_BoundSkipsLeadingEmptyLineString(t *testing.T) {
+	mls := MultiLineString{
+		{},
+		{{10, 10}, {12, 12}},
+	}
+
+	b := mls.Bound()
+	if !b.Equal(Bound{Min: Point{10, 10}, Max: Point{12, 12}}) {
+		t.Errorf("incorrect bound: %v", b)
+	}
+}
+
 func TestMultiLineString_Equal(t *testing.T) {
 	cases := []struct {
 		name     string

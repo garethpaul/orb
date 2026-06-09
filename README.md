@@ -67,6 +67,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `LineString.Reverse` handles empty line strings without panicking.
 - `Collection.Dimensions` skips nil geometries and keeps all-nil collections at
   the same empty dimension result.
+- `Bound.Union` treats an empty receiver as identity so aggregate bounds do not
+  inherit the empty bound sentinel.
 
 ## Testing and Verification
 
@@ -93,6 +95,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   than panic in caller pipelines.
 - Empty line strings should remain safe for helper methods such as reverse.
 - Nil geometries inside collections should be ignored by aggregate helpers.
+- Empty bounds should remain identity values in bound union helpers.
 
 ## Maintenance Notes
 

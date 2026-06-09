@@ -10,6 +10,7 @@
   orientation checks return zero instead of panicking.
 - Made `LineString.Reverse` tolerate empty line strings without panicking.
 - Made `Collection.Dimensions` skip nil geometries instead of panicking.
+- Made `Bound.Union` treat an empty receiver as an identity value.
 - Added local ignore rules for secrets, logs, Go test binaries, coverage
   output, and temporary build artifacts.
 - Documented the module path, Mapbox Vector Tile generated source, and testdata
