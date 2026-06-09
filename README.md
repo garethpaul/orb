@@ -62,6 +62,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
 - Run `make check` before changing geometry algorithms, encoders, generated
   protobuf code, or fixture data.
+- `make lint`, `make build`, and `make verify` are stable aliases for the Go
+  vet, build-through-test, and full verification gates.
 - Core ring helpers treat degenerate rings as non-closed or zero-orientation
   inputs instead of panicking.
 - `LineString.Reverse` handles empty line strings without panicking.
@@ -74,6 +76,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - `make check`
+- `make lint`
+- `make build`
+- `make verify`
 - `go test ./...`
 - `go vet ./...`
 - `python3 scripts/check-baseline.py`

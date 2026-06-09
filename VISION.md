@@ -14,9 +14,11 @@ geometry encodings.
 The goal is to keep the core types idiomatic, stable, and easy to compose while
 maintaining correctness across geographic and planar operations.
 
-Current baseline: `make check` runs `go test ./...` and `go vet ./...` through
-the Go module `github.com/paulmach/orb` and verifies the generated Mapbox
-Vector Tile source and fixture set remain present.
+Current baseline: `make check` runs `go test ./...`, `make lint`, and static
+verification through the Go module `github.com/paulmach/orb`; `make build` and
+`make verify` provide stable aliases for build-through-test and full
+verification. The gate also verifies the generated Mapbox Vector Tile source
+and fixture set remain present.
 
 The current focus is:
 

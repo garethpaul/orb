@@ -24,6 +24,8 @@ REQUIRED = [
     "docs/plans/2026-06-09-collection-dimensions-nil.md",
     "docs/plans/2026-06-09-empty-bound-union.md",
     "docs/plans/2026-06-09-simplify-empty-multipolygon.md",
+    "docs/plans/2026-06-09-make-gate-aliases.md",
+    "docs/plans/2026-06-09-planar-empty-containment.md",
     "scripts/check-baseline.py",
 ]
 
@@ -54,7 +56,15 @@ def main():
             failures.append(f"go.sum must include {phrase}")
 
     makefile = read("Makefile")
-    for phrase in ["go test ./...", "go vet ./...", "python3 scripts/check-baseline.py", "check: test vet static-check"]:
+    for phrase in [
+        "go test ./...",
+        "go vet ./...",
+        "python3 scripts/check-baseline.py",
+        "check: test lint static-check",
+        "lint: vet",
+        "build: test",
+        "verify: check",
+    ]:
         if phrase not in makefile:
             failures.append(f"Makefile must include {phrase}")
 
@@ -116,10 +126,24 @@ def main():
         failures.append("simplify multiPolygon must skip empty polygons before indexing")
     if "TestMultiPolygonSkipsEmptyPolygon" not in simplify_tests:
         failures.append("simplify tests must cover empty polygons inside multipolygons")
+    planar_contains = read("planar/contains.go")
+    planar_contains_tests = read("planar/contains_test.go")
+    if "if len(r) == 0" not in planar_contains or "if len(p) == 0" not in planar_contains:
+        failures.append("planar containment helpers must guard empty rings and polygons")
+    for phrase in [
+        "TestRingContainsEmptyRing",
+        "TestPolygonContainsEmptyPolygon",
+        "TestMultiPolygonContainsSkipsEmptyPolygons",
+    ]:
+        if phrase not in planar_contains_tests:
+            failures.append(f"planar containment tests must include {phrase}")
 
     docs = "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md"])
     for phrase in [
         "make check",
+        "make lint",
+        "make build",
+        "make verify",
         "go test ./...",
         "go vet ./...",
         "github.com/paulmach/orb",
@@ -130,6 +154,7 @@ def main():
         "nil geometries",
         "empty bounds",
         "empty polygons inside multipolygons",
+        "empty rings and polygons",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -152,6 +177,13 @@ def main():
     simplify_plan = read("docs/plans/2026-06-09-simplify-empty-multipolygon.md")
     if "status: completed" not in simplify_plan or "multiPolygon" not in simplify_plan:
         failures.append("simplify empty multipolygon plan must record completed status and verification")
+    aliases_plan = read("docs/plans/2026-06-09-make-gate-aliases.md")
+    for phrase in ["status: completed", "make lint", "make build", "make verify"]:
+        if phrase not in aliases_plan:
+            failures.append(f"make gate alias plan must record {phrase}")
+    planar_contains_plan = read("docs/plans/2026-06-09-planar-empty-containment.md")
+    if "status: completed" not in planar_contains_plan or "RingContains" not in planar_contains_plan:
+        failures.append("planar empty containment plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

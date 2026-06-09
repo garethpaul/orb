@@ -1,6 +1,12 @@
-.PHONY: check static-check test vet
+.PHONY: build check lint static-check test verify vet
 
-check: test vet static-check
+check: test lint static-check
+
+verify: check
+
+build: test
+
+lint: vet
 
 test:
 	go test ./...

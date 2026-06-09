@@ -2,6 +2,7 @@
 
 ## 2026-06-09
 
+- Added stable Make aliases for lint, build-through-test, and verify gates.
 - Made multipolygon simplification skip empty polygon entries without panicking.
 
 ## 2026-06-08

@@ -43,8 +43,9 @@ Dependency updates should come from trusted package managers and should keep loc
 
 For this geometry library, also review malformed GeoJSON, WKB/WKT, and Mapbox
 Vector Tile inputs for panics, excessive allocation, coordinate-order mistakes,
-and projection edge cases. Run `make check` and `go test ./...` before changing
-parsers, encoders, generated protobuf code, or fixture data.
+and projection edge cases. Run `make check`, `make lint`, `make build`,
+`make verify`, and `go test ./...` before changing parsers, encoders, generated
+protobuf code, or fixture data.
 Degenerate rings should remain panic-resistant because geometry libraries are
 often used in data pipelines that receive malformed input.
 Empty line strings should also remain panic-resistant in helper methods such as
