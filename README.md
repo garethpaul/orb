@@ -71,6 +71,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   the same empty dimension result.
 - `Bound.Union` treats empty receiver bounds and empty union arguments as
   identity values so aggregate bounds do not inherit the empty bound sentinel.
+- `Bound.IsEmpty` treats malformed negative bounds as empty while preserving
+  zero-area bounds, such as single points or horizontal and vertical segments,
+  as valid bounds.
 - Simplification skips empty polygons inside multipolygons without panicking.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
@@ -104,6 +107,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Empty line strings should remain safe for helper methods such as reverse.
 - Nil geometries inside collections should be ignored by aggregate helpers.
 - Empty bounds should remain identity values in bound union helpers.
+- Zero-area bounds should remain valid instead of being treated as empty
+  malformed bounds.
 - Empty polygons inside multipolygons should be skipped by simplification
   helpers instead of panicking.
 - Empty rings and polygons should be rejected by planar containment helpers

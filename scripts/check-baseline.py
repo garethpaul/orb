@@ -27,6 +27,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-simplify-empty-multipolygon.md",
     "docs/plans/2026-06-09-make-gate-aliases.md",
     "docs/plans/2026-06-09-planar-empty-containment.md",
+    "docs/plans/2026-06-09-zero-area-bound-contract.md",
     "scripts/check-baseline.py",
 ]
 
@@ -121,6 +122,11 @@ def main():
         failures.append("bound tests must cover empty receiver union")
     if "TestBoundUnionWithEmptyArgument" not in bound_tests:
         failures.append("bound tests must cover empty argument union")
+    if "Zero-area bounds" not in bound:
+        failures.append("Bound.IsEmpty docs must clarify zero-area bound behavior")
+    for phrase in ["single point", "horizontal zero-area bound", "vertical zero-area bound"]:
+        if phrase not in bound_tests:
+            failures.append(f"bound tests must cover {phrase}")
     if "TestMultiLineString_BoundSkipsLeadingEmptyLineString" not in multi_line_tests:
         failures.append("multi line string tests must cover leading empty bounds")
     simplify_helpers = read("simplify/helpers.go")
@@ -159,6 +165,7 @@ def main():
         "empty union arguments",
         "empty polygons inside multipolygons",
         "empty rings and polygons",
+        "zero-area bounds",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -195,6 +202,9 @@ def main():
     planar_contains_plan = read("docs/plans/2026-06-09-planar-empty-containment.md")
     if "status: completed" not in planar_contains_plan or "RingContains" not in planar_contains_plan:
         failures.append("planar empty containment plan must record completed status and verification")
+    zero_area_bound_plan = read("docs/plans/2026-06-09-zero-area-bound-contract.md")
+    if "status: completed" not in zero_area_bound_plan or "zero-area bounds" not in zero_area_bound_plan:
+        failures.append("zero-area bound plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

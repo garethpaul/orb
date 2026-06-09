@@ -154,9 +154,10 @@ func (b Bound) RightBottom() Point {
 	return Point{b.Right(), b.Bottom()}
 }
 
-// IsEmpty returns true if it contains zero area or if
-// it's in some malformed negative state where the left point is larger than the right.
-// This can be caused by padding too much negative.
+// IsEmpty returns true if it is in a malformed negative state where the min
+// point is larger than the max point on either axis. Zero-area bounds, such as
+// a single point or horizontal/vertical segment, are valid and are not empty.
+// A negative bound can be caused by padding too much negative.
 func (b Bound) IsEmpty() bool {
 	return b.Min[0] > b.Max[0] || b.Min[1] > b.Max[1]
 }

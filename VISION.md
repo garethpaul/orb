@@ -35,6 +35,7 @@ Priority:
 - Keep nil geometries in collections safe for aggregate helpers
 - Keep empty bounds and empty union arguments safe as identity values in
   aggregate helpers
+- Keep zero-area bounds valid and distinct from malformed negative bounds
 - Keep empty polygons inside multipolygons safe in simplification helpers
 - Keep empty rings and polygons safe in planar containment helpers
 

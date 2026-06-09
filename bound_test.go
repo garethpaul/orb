@@ -179,22 +179,17 @@ func TestBoundIsEmpty(t *testing.T) {
 		},
 		{
 			name:   "single point",
-			bound:  Bound{Min: Point{5, 7}, Max: Point{6, 8}},
+			bound:  Bound{Min: Point{5, 7}, Max: Point{5, 7}},
 			result: false,
 		},
 		{
-			name:   "horizontal bar",
-			bound:  Bound{Min: Point{5, 7}, Max: Point{6, 8}},
+			name:   "horizontal zero-area bound",
+			bound:  Bound{Min: Point{5, 7}, Max: Point{6, 7}},
 			result: false,
 		},
 		{
-			name:   "vertical bar",
-			bound:  Bound{Min: Point{5, 7}, Max: Point{6, 8}},
-			result: false,
-		},
-		{
-			name:   "vertical bar",
-			bound:  Bound{Min: Point{5, 7}, Max: Point{6, 8}},
+			name:   "vertical zero-area bound",
+			bound:  Bound{Min: Point{5, 7}, Max: Point{5, 8}},
 			result: false,
 		},
 	}
