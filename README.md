@@ -64,6 +64,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   protobuf code, or fixture data.
 - Core ring helpers treat degenerate rings as non-closed or zero-orientation
   inputs instead of panicking.
+- `LineString.Reverse` handles empty line strings without panicking.
 
 ## Testing and Verification
 
@@ -88,6 +89,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   in sync.
 - Degenerate rings and malformed geometry inputs should fail predictably rather
   than panic in caller pipelines.
+- Empty line strings should remain safe for helper methods such as reverse.
 
 ## Maintenance Notes
 

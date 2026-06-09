@@ -5,6 +5,15 @@ import (
 )
 
 func TestLineStringReverse(t *testing.T) {
+	t.Run("empty line string", func(t *testing.T) {
+		var ls LineString
+		ls.Reverse()
+
+		if len(ls) != 0 {
+			t.Errorf("empty line should stay empty when reversed")
+		}
+	})
+
 	t.Run("1 point line", func(t *testing.T) {
 		ls := LineString{{1, 2}}
 		rs := ls.Clone()

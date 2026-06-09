@@ -29,6 +29,7 @@ Priority:
 - Keep package READMEs aligned with actual APIs
 - Keep Go module metadata and dependency checksums current
 - Keep degenerate rings and malformed geometry inputs panic-resistant
+- Keep empty line strings safe in core helper methods
 
 Next priorities:
 

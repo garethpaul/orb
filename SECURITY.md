@@ -47,6 +47,8 @@ and projection edge cases. Run `make check` and `go test ./...` before changing
 parsers, encoders, generated protobuf code, or fixture data.
 Degenerate rings should remain panic-resistant because geometry libraries are
 often used in data pipelines that receive malformed input.
+Empty line strings should also remain panic-resistant in helper methods such as
+reverse.
 
 ## Safe Research Guidelines
 

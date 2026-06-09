@@ -20,6 +20,7 @@ REQUIRED = [
     "go.sum",
     PLAN,
     "docs/plans/2026-06-09-degenerate-ring-guards.md",
+    "docs/plans/2026-06-09-empty-linestring-reverse.md",
     "scripts/check-baseline.py",
 ]
 
@@ -76,6 +77,12 @@ def main():
     for phrase in ["if len(r) < 4", "if len(r) < 3"]:
         if phrase not in ring:
             failures.append(f"ring.go must guard degenerate rings with {phrase}")
+    line_string = read("line_string.go")
+    if "for i, j := 0, len(ls)-1; i < j; i, j = i+1, j-1" not in line_string:
+        failures.append("LineString.Reverse must tolerate empty line strings")
+    line_string_tests = read("line_string_test.go")
+    if "empty line string" not in line_string_tests:
+        failures.append("line string tests must cover empty reverse")
     ring_tests = read("ring_test.go")
     for phrase in [
         "empty ring is not closed",
@@ -95,6 +102,7 @@ def main():
         "Go module",
         "Mapbox Vector Tile",
         "degenerate rings",
+        "empty line strings",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -105,6 +113,9 @@ def main():
     ring_plan = read("docs/plans/2026-06-09-degenerate-ring-guards.md")
     if "status: completed" not in ring_plan or "go test ./..." not in ring_plan:
         failures.append("ring guard plan must record completed status and verification")
+    line_plan = read("docs/plans/2026-06-09-empty-linestring-reverse.md")
+    if "status: completed" not in line_plan or "LineString.Reverse" not in line_plan:
+        failures.append("line string plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")
