@@ -117,6 +117,12 @@ func TestRingContains(t *testing.T) {
 	}
 }
 
+func TestRingContainsEmptyRing(t *testing.T) {
+	if RingContains(orb.Ring{}, orb.Point{1, 1}) {
+		t.Errorf("empty ring should not contain a point")
+	}
+}
+
 func TestPolygonContains(t *testing.T) {
 	// should exclude holes
 	p := orb.Polygon{
@@ -136,6 +142,12 @@ func TestPolygonContains(t *testing.T) {
 	p[1].Reverse() // oriented correctly as opposite of outer
 	if PolygonContains(p, orb.Point{1.5, 1.5}) {
 		t.Errorf("should not contain point in hole")
+	}
+}
+
+func TestPolygonContainsEmptyPolygon(t *testing.T) {
+	if PolygonContains(orb.Polygon{}, orb.Point{1, 1}) {
+		t.Errorf("empty polygon should not contain a point")
 	}
 }
 
@@ -161,6 +173,17 @@ func TestMultiPolygonContains(t *testing.T) {
 
 	if MultiPolygonContains(mp, orb.Point{1.5, 0.5}) {
 		t.Errorf("should not contain point")
+	}
+}
+
+func TestMultiPolygonContainsSkipsEmptyPolygons(t *testing.T) {
+	mp := orb.MultiPolygon{
+		{},
+		{{{2, 0}, {3, 0}, {3, 1}, {2, 1}, {2, 0}}},
+	}
+
+	if !MultiPolygonContains(mp, orb.Point{2.5, 0.5}) {
+		t.Errorf("multi polygon should skip empty polygons and contain point in later polygon")
 	}
 }
 

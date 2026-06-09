@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Made planar containment helpers treat empty rings and polygons as
+  non-containing inputs instead of panicking.
 - Added stable Make aliases for lint, build-through-test, and verify gates.
 - Made multipolygon simplification skip empty polygon entries without panicking.
 

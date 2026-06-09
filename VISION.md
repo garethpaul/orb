@@ -35,12 +35,14 @@ Priority:
 - Keep nil geometries in collections safe for aggregate helpers
 - Keep empty bounds safe as identity values in aggregate helpers
 - Keep empty polygons inside multipolygons safe in simplification helpers
+- Keep empty rings and polygons safe in planar containment helpers
 
 Next priorities:
 
 - Document supported Go versions and module expectations
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
+- Add more planar containment fixtures for malformed ring and polygon inputs
 - Keep encoding packages explicit about coordinate order and projection context
 - Review benchmark coverage for geometry-heavy operations
 

@@ -72,6 +72,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `Bound.Union` treats an empty receiver as identity so aggregate bounds do not
   inherit the empty bound sentinel.
 - Simplification skips empty polygons inside multipolygons without panicking.
+- Planar containment treats empty rings and polygons as non-containing inputs
+  instead of panicking.
 
 ## Testing and Verification
 
@@ -104,6 +106,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Empty bounds should remain identity values in bound union helpers.
 - Empty polygons inside multipolygons should be skipped by simplification
   helpers instead of panicking.
+- Empty rings and polygons should be rejected by planar containment helpers
+  instead of panicking.
 
 ## Maintenance Notes
 

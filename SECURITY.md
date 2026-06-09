@@ -54,6 +54,8 @@ Empty bounds should remain identity values when aggregate helpers union child
 geometry bounds.
 Empty polygons inside multipolygons should remain panic-resistant in
 simplification helpers.
+Empty rings and polygons should remain panic-resistant in planar containment
+helpers.
 
 ## Safe Research Guidelines
 
