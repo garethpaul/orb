@@ -75,6 +75,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   zero-area bounds, such as single points or horizontal and vertical segments,
   as valid bounds.
 - Simplification skips empty polygons inside multipolygons without panicking.
+- `MultiPolygon.Bound` keeps leading empty polygons from leaking empty-bound
+  sentinels into aggregate bounds.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 
@@ -111,6 +113,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   malformed bounds.
 - Empty polygons inside multipolygons should be skipped by simplification
   helpers instead of panicking.
+- Leading empty polygons should remain safe in multipolygon bound aggregation.
 - Empty rings and polygons should be rejected by planar containment helpers
   instead of panicking.
 

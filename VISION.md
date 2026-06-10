@@ -37,6 +37,7 @@ Priority:
   aggregate helpers
 - Keep zero-area bounds valid and distinct from malformed negative bounds
 - Keep empty polygons inside multipolygons safe in simplification helpers
+- Keep leading empty polygons safe in multipolygon bound aggregation
 - Keep empty rings and polygons safe in planar containment helpers
 
 Next priorities:
@@ -44,6 +45,7 @@ Next priorities:
 - Document supported Go versions and module expectations
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
+- Add aggregate-bound fixtures for leading empty polygons and geometry groups
 - Add more planar containment fixtures for malformed ring and polygon inputs
 - Keep encoding packages explicit about coordinate order and projection context
 - Review benchmark coverage for geometry-heavy operations

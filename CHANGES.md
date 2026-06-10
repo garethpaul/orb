@@ -11,6 +11,11 @@
 - Clarified and tested that zero-area bounds remain valid while malformed
   negative bounds are empty.
 
+## 2026-06-10
+
+- Added direct coverage that `MultiPolygon.Bound` skips leading empty polygons
+  when aggregating child bounds.
+
 ## 2026-06-08
 
 - Added a Go module for the existing `github.com/paulmach/orb` import path.

@@ -28,6 +28,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-make-gate-aliases.md",
     "docs/plans/2026-06-09-planar-empty-containment.md",
     "docs/plans/2026-06-09-zero-area-bound-contract.md",
+    "docs/plans/2026-06-10-multipolygon-empty-bound.md",
     "scripts/check-baseline.py",
 ]
 
@@ -116,6 +117,7 @@ def main():
     bound = read("bound.go")
     bound_tests = read("bound_test.go")
     multi_line_tests = read("multi_line_string_test.go")
+    multi_polygon_tests = read("multi_polygon_test.go")
     if "if b.IsEmpty()" not in bound or "return other" not in bound:
         failures.append("Bound.Union must return the other bound when the receiver is empty")
     if "TestBoundUnionWithEmptyReceiver" not in bound_tests:
@@ -129,6 +131,8 @@ def main():
             failures.append(f"bound tests must cover {phrase}")
     if "TestMultiLineString_BoundSkipsLeadingEmptyLineString" not in multi_line_tests:
         failures.append("multi line string tests must cover leading empty bounds")
+    if "TestMultiPolygon_BoundSkipsLeadingEmptyPolygon" not in multi_polygon_tests:
+        failures.append("multi polygon tests must cover leading empty polygon bounds")
     simplify_helpers = read("simplify/helpers.go")
     simplify_tests = read("simplify/helpers_test.go")
     if "len(p) == 0" not in simplify_helpers or "len(p[0]) <= 2" not in simplify_helpers:
@@ -166,6 +170,7 @@ def main():
         "empty polygons inside multipolygons",
         "empty rings and polygons",
         "zero-area bounds",
+        "leading empty polygons",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -205,6 +210,13 @@ def main():
     zero_area_bound_plan = read("docs/plans/2026-06-09-zero-area-bound-contract.md")
     if "status: completed" not in zero_area_bound_plan or "zero-area bounds" not in zero_area_bound_plan:
         failures.append("zero-area bound plan must record completed status and verification")
+    multipolygon_empty_bound_plan = read("docs/plans/2026-06-10-multipolygon-empty-bound.md")
+    if (
+        "status: completed" not in multipolygon_empty_bound_plan
+        or "MultiPolygon.Bound" not in multipolygon_empty_bound_plan
+        or "leading empty polygons" not in multipolygon_empty_bound_plan
+    ):
+        failures.append("multipolygon empty bound plan must record completed status and verification")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

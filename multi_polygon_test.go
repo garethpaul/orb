@@ -17,6 +17,18 @@ func TestMultiPolygon_Bound(t *testing.T) {
 	}
 }
 
+func TestMultiPolygon_BoundSkipsLeadingEmptyPolygon(t *testing.T) {
+	mp := MultiPolygon{
+		{},
+		{{{10, 10}, {10, 12}, {12, 12}, {12, 10}, {10, 10}}},
+	}
+
+	b := mp.Bound()
+	if !b.Equal(Bound{Min: Point{10, 10}, Max: Point{12, 12}}) {
+		t.Errorf("incorrect bound: %v", b)
+	}
+}
+
 func TestMultiPolygon_Equal(t *testing.T) {
 	cases := []struct {
 		name     string

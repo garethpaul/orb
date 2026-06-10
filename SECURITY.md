@@ -56,6 +56,8 @@ Zero-area bounds should remain valid so point and segment extents are not
 misclassified as malformed empty bounds.
 Empty polygons inside multipolygons should remain panic-resistant in
 simplification helpers.
+Leading empty polygons should remain safe in multipolygon bound aggregation so
+aggregate bounds do not leak malformed empty-bound sentinels.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 
