@@ -39,6 +39,7 @@ Priority:
 - Keep empty polygons inside multipolygons safe in simplification helpers
 - Keep leading empty polygons safe in multipolygon bound aggregation
 - Keep empty rings and polygons safe in planar containment helpers
+- Keep empty interval resampling safe before distance precomputation
 - Keep the race detector in the canonical verification gate
 - Keep fixed Go 1.20 and Go 1.25 validation in pinned hosted Linux CI
 
@@ -47,6 +48,7 @@ Next priorities:
 - Document supported Go versions and module expectations
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
+- Add resampling fixtures for empty, single-point, and zero-length lines
 - Add aggregate-bound fixtures for leading empty polygons and geometry groups
 - Add more planar containment fixtures for malformed ring and polygon inputs
 - Keep encoding packages explicit about coordinate order and projection context

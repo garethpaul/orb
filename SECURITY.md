@@ -60,6 +60,8 @@ Empty polygons inside multipolygons should remain panic-resistant in
 simplification helpers.
 Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
+Empty interval resampling should return before allocating segment distances or
+calling caller-provided distance functions.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 

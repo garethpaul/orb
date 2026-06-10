@@ -114,6 +114,32 @@ func TestToInterval(t *testing.T) {
 	}
 }
 
+func TestToIntervalEmptyLineString(t *testing.T) {
+	distanceCalled := false
+	distance := func(a, b orb.Point) float64 {
+		distanceCalled = true
+		return planar.Distance(a, b)
+	}
+
+	if result := ToInterval(nil, distance, 5); result != nil {
+		t.Fatalf("nil line string should remain nil: %v", result)
+	}
+
+	empty := orb.LineString{}
+	result := ToInterval(empty, distance, 5)
+	if result == nil || len(result) != 0 {
+		t.Fatalf("empty line string should remain non-nil and empty: %v", result)
+	}
+
+	single := orb.LineString{{1, 2}}
+	if result := ToInterval(single, distance, 5); !result.Equal(single) {
+		t.Fatalf("single-point line string should remain unchanged: %v", result)
+	}
+	if distanceCalled {
+		t.Fatal("distance function should not be called for short line strings")
+	}
+}
+
 func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls := orb.LineString{{0, 0}}
 

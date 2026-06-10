@@ -77,6 +77,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Simplification skips empty polygons inside multipolygons without panicking.
 - `MultiPolygon.Bound` keeps leading empty polygons from leaking empty-bound
   sentinels into aggregate bounds.
+- Empty interval resampling returns empty line strings before distance
+  precomputation, avoiding negative slice sizes and callback execution.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 

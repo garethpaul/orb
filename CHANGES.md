@@ -19,6 +19,8 @@
 - Added pinned hosted Linux validation on Go 1.20.14 and Go 1.25.3.
 - Pinned checkout to its Node.js 24-compatible release before the hosted
   Node.js 20 action runtime removal.
+- Guarded empty line strings in `resample.ToInterval` before distance
+  precomputation and callback execution.
 
 ## 2026-06-08
 
