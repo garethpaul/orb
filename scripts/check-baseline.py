@@ -232,7 +232,7 @@ def main():
         "cancel-in-progress: true",
         "runs-on: ubuntu-24.04",
         "timeout-minutes: 15",
-        "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
         'go-version: ["1.20.14", "1.25.3"]',
         "GOTOOLCHAIN: local",

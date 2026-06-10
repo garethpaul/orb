@@ -30,7 +30,8 @@ Files:
 
 Add `go test -race ./...` as a dedicated Make target included by `make check`.
 Run the full gate on fixed Go 1.20.14 and Go 1.25.3 hosted Linux jobs using
-commit-pinned checkout and Go setup actions with `GOTOOLCHAIN=local`.
+commit-pinned Node.js 24-compatible checkout and Go setup actions with
+`GOTOOLCHAIN=local`.
 
 ## Verification
 
