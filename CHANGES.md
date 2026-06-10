@@ -15,6 +15,8 @@
 
 - Added direct coverage that `MultiPolygon.Bound` skips leading empty polygons
   when aggregating child bounds.
+- Added the Go race detector to the canonical verification gate.
+- Added pinned hosted Linux validation on Go 1.20.14 and Go 1.25.3.
 
 ## 2026-06-08
 

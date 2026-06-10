@@ -39,6 +39,8 @@ Priority:
 - Keep empty polygons inside multipolygons safe in simplification helpers
 - Keep leading empty polygons safe in multipolygon bound aggregation
 - Keep empty rings and polygons safe in planar containment helpers
+- Keep the race detector in the canonical verification gate
+- Keep fixed Go 1.20 and Go 1.25 validation in pinned hosted Linux CI
 
 Next priorities:
 

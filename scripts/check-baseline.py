@@ -8,7 +8,9 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = "docs/plans/2026-06-08-orb-go-module-baseline.md"
+HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
 REQUIRED = [
+    ".github/workflows/check.yml",
     ".gitignore",
     "CHANGES.md",
     "Makefile",
@@ -29,6 +31,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-planar-empty-containment.md",
     "docs/plans/2026-06-09-zero-area-bound-contract.md",
     "docs/plans/2026-06-10-multipolygon-empty-bound.md",
+    HOSTED_VALIDATION_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -61,9 +64,10 @@ def main():
     makefile = read("Makefile")
     for phrase in [
         "go test ./...",
+        "go test -race ./...",
         "go vet ./...",
         "python3 scripts/check-baseline.py",
-        "check: test lint static-check",
+        "check: test race lint static-check",
         "lint: vet",
         "build: test",
         "verify: check",
@@ -171,6 +175,8 @@ def main():
         "empty rings and polygons",
         "zero-area bounds",
         "leading empty polygons",
+        "race detector",
+        "hosted Linux",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -217,6 +223,23 @@ def main():
         or "leading empty polygons" not in multipolygon_empty_bound_plan
     ):
         failures.append("multipolygon empty bound plan must record completed status and verification")
+    hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
+    workflow = read(".github/workflows/check.yml")
+    if "status: completed" not in hosted_validation_plan or "go test -race ./..." not in hosted_validation_plan:
+        failures.append("hosted Go validation plan must record completed status and race verification")
+    for expected in [
+        "permissions:\n  contents: read",
+        "cancel-in-progress: true",
+        "runs-on: ubuntu-24.04",
+        "timeout-minutes: 15",
+        "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+        "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
+        'go-version: ["1.20.14", "1.25.3"]',
+        "GOTOOLCHAIN: local",
+        "run: make check",
+    ]:
+        if expected not in workflow:
+            failures.append(f"Check workflow must keep {expected}")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")
