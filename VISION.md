@@ -42,7 +42,8 @@ Priority:
 - Keep empty interval resampling safe before distance precomputation
 - Keep polygon distance indices aligned with the matching immediate ring
 - Keep the race detector in the canonical verification gate
-- Keep fixed Go 1.20 and Go 1.25 validation in pinned hosted Linux CI
+- Keep fixed Go 1.20 and Go 1.25 validation in pinned, read-only,
+  credential-free hosted Linux CI
 
 Next priorities:
 

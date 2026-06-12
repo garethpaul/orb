@@ -2,6 +2,8 @@
 
 ## 2026-06-12
 
+- Disabled checkout credential persistence in the pinned, read-only hosted
+  validation job and added structural checks for that boundary.
 - Corrected `planar.DistanceFromWithIndex` for polygons to return the matching
   ring index instead of an outer or hole segment index.
 - Added outer-ring, hole-ring, and empty-polygon regression coverage.

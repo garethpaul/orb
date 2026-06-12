@@ -94,8 +94,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `go test -race ./...`
 - `go vet ./...`
 - `python3 scripts/check-baseline.py`
-- Pinned hosted Linux validation runs the full gate, including the race
-  detector, on Go 1.20.14 and Go 1.25.3 with toolchain auto-upgrades disabled.
+- Pinned hosted Linux validation uses a read-only, credential-free checkout and
+  runs the full gate, including the race detector, on Go 1.20.14 and Go 1.25.3
+  with toolchain auto-upgrades disabled.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
