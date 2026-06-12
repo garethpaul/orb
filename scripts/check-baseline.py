@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = "docs/plans/2026-06-08-orb-go-module-baseline.md"
 HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
+POLYGON_DISTANCE_INDEX_PLAN = "docs/plans/2026-06-12-polygon-distance-ring-index.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -33,6 +34,7 @@ REQUIRED = [
     "docs/plans/2026-06-10-multipolygon-empty-bound.md",
     "docs/plans/2026-06-10-resample-empty-interval.md",
     HOSTED_VALIDATION_PLAN,
+    POLYGON_DISTANCE_INDEX_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -147,6 +149,25 @@ def main():
         failures.append("ToInterval must guard empty line strings before distance precomputation")
     if "TestToIntervalEmptyLineString" not in resample_tests or "distance function should not be called" not in resample_tests:
         failures.append("resample tests must cover empty interval input before distance calls")
+    distance_from = read("planar/distance_from.go")
+    distance_from_tests = read("planar/distance_from_test.go")
+    for phrase in [
+        "index of the immediate child",
+        "dist, _ := lineStringDistanceFrom(orb.LineString(p[0]), point)",
+        "index := 0",
+        "d, _ := lineStringDistanceFrom(orb.LineString(p[i]), point)",
+        "index = i",
+    ]:
+        if phrase not in distance_from:
+            failures.append(f"polygon distance ring index must include {phrase}")
+    for phrase in [
+        "TestDistanceFromWithIndex_PolygonReturnsRingIndex",
+        "outer ring nearest on nonzero segment",
+        "hole ring nearest on different segment",
+        "TestDistanceFromWithIndex_EmptyPolygon",
+    ]:
+        if phrase not in distance_from_tests:
+            failures.append(f"polygon distance tests must include {phrase}")
     simplify_helpers = read("simplify/helpers.go")
     simplify_tests = read("simplify/helpers_test.go")
     if "len(p) == 0" not in simplify_helpers or "len(p[0]) <= 2" not in simplify_helpers:
@@ -186,6 +207,7 @@ def main():
         "zero-area bounds",
         "leading empty polygons",
         "empty interval resampling",
+        "polygon ring index",
         "race detector",
         "hosted Linux",
     ]:
@@ -237,6 +259,13 @@ def main():
     resample_empty_plan = read("docs/plans/2026-06-10-resample-empty-interval.md")
     if "status: completed" not in resample_empty_plan or "ToInterval" not in resample_empty_plan:
         failures.append("empty interval resampling plan must record completed status and verification")
+    polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
+    if (
+        "status: completed" not in polygon_distance_index_plan
+        or "DistanceFromWithIndex" not in polygon_distance_index_plan
+        or "ring index" not in polygon_distance_index_plan
+    ):
+        failures.append("polygon distance ring index plan must record completed status and verification")
     hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
     workflow = read(".github/workflows/check.yml")
     if "status: completed" not in hosted_validation_plan or "go test -race ./..." not in hosted_validation_plan:

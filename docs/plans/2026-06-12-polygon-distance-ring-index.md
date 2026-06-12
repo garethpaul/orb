@@ -1,6 +1,6 @@
 # Polygon Distance Ring Index
 
-status: planned
+status: completed
 
 ## Context
 
@@ -33,9 +33,11 @@ index.
 
 ## Verification
 
-- `GOTOOLCHAIN=go1.20.14 go test ./planar`
-- `GOTOOLCHAIN=go1.20.14 make check`
-- `GOTOOLCHAIN=go1.25.3 make check`
-- Mutations restoring outer-ring segment indices or hole-loop shadowing are
-  rejected by focused tests and the baseline.
-- `git diff --check`
+- `GOTOOLCHAIN=go1.20.14 go test ./planar` passed on 2026-06-12.
+- `GOTOOLCHAIN=go1.20.14 make check` passed, including race detection and vet,
+  on 2026-06-12.
+- `GOTOOLCHAIN=go1.25.3 make check` passed, including race detection and vet,
+  on 2026-06-12.
+- Focused tests rejected mutations restoring the outer-ring segment index and
+  the hole-loop segment-index shadowing on 2026-06-12.
+- `git diff --check` passed on 2026-06-12.

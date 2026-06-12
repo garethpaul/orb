@@ -64,6 +64,8 @@ Empty interval resampling should return before allocating segment distances or
 calling caller-provided distance functions.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
+Polygon distance indices should identify the matching immediate ring rather
+than an internal segment so callers do not select unrelated geometry.
 
 ## Safe Research Guidelines
 

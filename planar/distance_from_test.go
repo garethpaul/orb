@@ -146,3 +146,48 @@ func TestDistanceFrom_Polygon(t *testing.T) {
 		})
 	}
 }
+
+func TestDistanceFromWithIndex_PolygonReturnsRingIndex(t *testing.T) {
+	outer := orb.Ring{{0, 0}, {3, 0}, {3, 3}, {0, 3}, {0, 0}}
+	hole := orb.Ring{{1, 1}, {2, 1}, {2, 2}, {1, 2}, {1, 1}}
+	polygon := orb.Polygon{outer, hole}
+
+	tests := []struct {
+		name     string
+		point    orb.Point
+		distance float64
+		index    int
+	}{
+		{
+			name:     "outer ring nearest on nonzero segment",
+			point:    orb.Point{-1, 2},
+			distance: 1,
+			index:    0,
+		},
+		{
+			name:     "hole ring nearest on different segment",
+			point:    orb.Point{1.5, 1.8},
+			distance: 0.2,
+			index:    1,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			distance, index := DistanceFromWithIndex(polygon, test.point)
+			if math.Abs(distance-test.distance) > epsilon {
+				t.Fatalf("incorrect distance: %v != %v", distance, test.distance)
+			}
+			if index != test.index {
+				t.Fatalf("incorrect ring index: %d != %d", index, test.index)
+			}
+		})
+	}
+}
+
+func TestDistanceFromWithIndex_EmptyPolygon(t *testing.T) {
+	distance, index := DistanceFromWithIndex(orb.Polygon{}, orb.Point{})
+	if !math.IsInf(distance, 1) || index != -1 {
+		t.Fatalf("empty polygon result: (%v, %d) != (+Inf, -1)", distance, index)
+	}
+}

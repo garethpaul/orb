@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-12
+
+- Corrected `planar.DistanceFromWithIndex` for polygons to return the matching
+  ring index instead of an outer or hole segment index.
+- Added outer-ring, hole-ring, and empty-polygon regression coverage.
+
 ## 2026-06-09
 
 - Made planar containment helpers treat empty rings and polygons as
