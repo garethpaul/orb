@@ -31,7 +31,14 @@ index.
 - Do not alter dependency or Go compatibility declarations.
 - Do not modify the occupied PR #1 branch.
 
-## Verification
+## Work Completed
+
+- Returned outer ring index `0` instead of its nearest segment index.
+- Returned the matching hole ring index without shadowing the ring loop index.
+- Preserved `+Inf` and `-1` for empty polygons.
+- Added focused outer, hole, and empty-polygon regression tests.
+
+## Verification Completed
 
 - `GOTOOLCHAIN=go1.20.14 go test ./planar` passed on 2026-06-12.
 - `GOTOOLCHAIN=go1.20.14 make check` passed, including race detection and vet,
@@ -41,3 +48,12 @@ index.
 - Focused tests rejected mutations restoring the outer-ring segment index and
   the hole-loop segment-index shadowing on 2026-06-12.
 - `git diff --check` passed on 2026-06-12.
+- `python3 -m py_compile scripts/check-baseline.py` passed.
+- Canonical push run `27398396811` and pull-request run `27398401926`
+  completed successfully at exact head
+  `dd2af0a49a33303c9336f67da7a39ac1c90a42f7` across Go `1.20.14`
+  and Go `1.25.3`.
+- `TestDistanceFromWithIndex_PolygonReturnsRingIndex` preserves
+  `outer ring nearest on nonzero segment` with `index: 0` and
+  `hole ring nearest on different segment` with `index: 1`.
+- `TestDistanceFromWithIndex_EmptyPolygon` preserves `+Inf` and `-1`.

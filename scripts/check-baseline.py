@@ -2,6 +2,7 @@
 """Static baseline checks for the orb Go geometry library."""
 
 from pathlib import Path
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -41,6 +42,14 @@ REQUIRED = [
 
 def read(path):
     return (ROOT / path).read_text(encoding="utf-8", errors="replace")
+
+
+def markdown_section(text, heading):
+    match = re.search(
+        rf"(?ms)^## {re.escape(heading)}\s*$\n(.*?)(?=^## |\Z)",
+        text,
+    )
+    return match.group(1).strip() if match else ""
 
 
 def main():
@@ -260,12 +269,35 @@ def main():
     if "status: completed" not in resample_empty_plan or "ToInterval" not in resample_empty_plan:
         failures.append("empty interval resampling plan must record completed status and verification")
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
-    if (
-        "status: completed" not in polygon_distance_index_plan
-        or "DistanceFromWithIndex" not in polygon_distance_index_plan
-        or "ring index" not in polygon_distance_index_plan
+    ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
+    ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")
+    ring_verification = markdown_section(polygon_distance_index_plan, "Verification Completed")
+    if ring_status != ["completed"] or not ring_work:
+        failures.append("polygon distance ring index plan must record one completed status and completed work")
+    if not ring_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", ring_verification
     ):
-        failures.append("polygon distance ring index plan must record completed status and verification")
+        failures.append("polygon distance ring index plan must record completed verification")
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 go test ./planar",
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.3 make check",
+        "git diff --check",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "27398396811",
+        "27398401926",
+        "dd2af0a49a33303c9336f67da7a39ac1c90a42f7",
+        "TestDistanceFromWithIndex_PolygonReturnsRingIndex",
+        "outer ring nearest on nonzero segment",
+        "index: 0",
+        "hole ring nearest on different segment",
+        "index: 1",
+        "TestDistanceFromWithIndex_EmptyPolygon",
+        "+Inf",
+        "-1",
+    ]:
+        if evidence not in ring_verification:
+            failures.append(f"polygon distance ring-index verification must record {evidence}")
     hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
     workflow = read(".github/workflows/check.yml")
     if "status: completed" not in hosted_validation_plan or "go test -race ./..." not in hosted_validation_plan:
