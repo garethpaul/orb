@@ -47,7 +47,8 @@ and projection edge cases. Run `make check`, `make lint`, `make build`,
 `make verify`, and `go test ./...` before changing parsers, encoders, generated
 protobuf code, or fixture data.
 The canonical gate also runs the Go race detector, and pinned hosted Linux jobs
-exercise both the declared Go 1.20 baseline and the newer Go 1.25 toolchain.
+exercise both the declared Go 1.20 baseline and patched Go 1.25.11. Hosted
+checkout does not retain credentials after fetching the repository.
 Degenerate rings should remain panic-resistant because geometry libraries are
 often used in data pipelines that receive malformed input.
 Empty line strings should also remain panic-resistant in helper methods such as

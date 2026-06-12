@@ -2,6 +2,7 @@
 """Static baseline checks for the orb Go geometry library."""
 
 from pathlib import Path
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -9,7 +10,9 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = "docs/plans/2026-06-08-orb-go-module-baseline.md"
 HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
+PATCHED_GO_PLAN = "docs/plans/2026-06-12-patched-modern-go-lane.md"
 REQUIRED = [
+    "AGENTS.md",
     ".github/workflows/check.yml",
     ".gitignore",
     "CHANGES.md",
@@ -33,6 +36,7 @@ REQUIRED = [
     "docs/plans/2026-06-10-multipolygon-empty-bound.md",
     "docs/plans/2026-06-10-resample-empty-interval.md",
     HOSTED_VALIDATION_PLAN,
+    PATCHED_GO_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -238,6 +242,7 @@ def main():
     if "status: completed" not in resample_empty_plan or "ToInterval" not in resample_empty_plan:
         failures.append("empty interval resampling plan must record completed status and verification")
     hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
+    patched_go_plan = read(PATCHED_GO_PLAN)
     workflow = read(".github/workflows/check.yml")
     if "status: completed" not in hosted_validation_plan or "go test -race ./..." not in hosted_validation_plan:
         failures.append("hosted Go validation plan must record completed status and race verification")
@@ -248,12 +253,46 @@ def main():
         "timeout-minutes: 15",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
-        'go-version: ["1.20.14", "1.25.3"]',
+        'go-version: ["1.20.14", "1.25.11"]',
         "GOTOOLCHAIN: local",
+        "persist-credentials: false",
         "run: make check",
     ]:
         if expected not in workflow:
             failures.append(f"Check workflow must keep {expected}")
+
+    expected_actions = [
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
+    ]
+    actions = re.findall(r"^\s*-?\s*uses:\s*(\S+)\s*$", workflow, re.MULTILINE)
+    if actions != expected_actions:
+        failures.append("Check workflow must use only the approved pinned checkout and setup-go actions")
+    if workflow.count("\npermissions:") != 1 or "write" in workflow.lower():
+        failures.append("Check workflow must keep one read-only permissions block")
+    if workflow.count("persist-credentials: false") != 1:
+        failures.append("Check workflow must disable persisted checkout credentials exactly once")
+
+    agents = read("AGENTS.md")
+    for phrase in [
+        "Go 1.20 module baseline",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "before invoking caller-provided distance functions",
+        "never commit credentials",
+    ]:
+        if phrase.lower() not in agents.lower():
+            failures.append(f"AGENTS.md must preserve the guardrail: {phrase}")
+
+    for phrase in [
+        "status: completed",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "0 reachable vulnerabilities",
+        "persist-credentials",
+    ]:
+        if phrase not in patched_go_plan:
+            failures.append(f"patched Go lane plan must record {phrase}")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

@@ -41,7 +41,7 @@ Priority:
 - Keep empty rings and polygons safe in planar containment helpers
 - Keep empty interval resampling safe before distance precomputation
 - Keep the race detector in the canonical verification gate
-- Keep fixed Go 1.20 and Go 1.25 validation in pinned hosted Linux CI
+- Keep fixed Go 1.20.14 and patched Go 1.25.11 validation in pinned hosted Linux CI
 
 Next priorities:
 

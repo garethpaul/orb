@@ -36,6 +36,7 @@
 
 - Language mix noted in the README: Go (88).
 - Keep imports compatible with module path `github.com/paulmach/orb`.
+- Preserve the declared Go 1.20 module baseline unless a deliberate compatibility migration is approved; validate with Go 1.20.14 and the patched Go 1.25.11 lane.
 - Run gofmt on changed Go files and keep table-driven tests close to the package under change.
 
 ## Testing guidance
@@ -54,11 +55,13 @@
 ## Safety and gotchas
 
 - Detected references to Mapbox. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- Never commit credentials, private keys, access tokens, or machine-local secret files.
 - Mapbox Vector Tile support depends on generated protobuf code under `encoding/mvt/vectortile`; keep the `.proto`, generated `.pb.go`, and tests in sync.
 - Degenerate rings and malformed geometry inputs should fail predictably rather than panic in caller pipelines.
 - Empty line strings should remain safe for helper methods such as reverse.
 - Nil geometries inside collections should be ignored by aggregate helpers.
 - Empty bounds should remain identity values in bound union helpers.
+- Empty line strings passed to interval resampling must return before invoking caller-provided distance functions.
 - Generated protobuf Go files are present; keep source `.proto`, generated files, and tests in sync.
 
 ## Agent workflow

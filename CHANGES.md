@@ -16,9 +16,10 @@
 - Added direct coverage that `MultiPolygon.Bound` skips leading empty polygons
   when aggregating child bounds.
 - Added the Go race detector to the canonical verification gate.
-- Added pinned hosted Linux validation on Go 1.20.14 and Go 1.25.3.
+- Added pinned hosted Linux validation on Go 1.20.14 and patched Go 1.25.11.
 - Pinned checkout to its Node.js 24-compatible release before the hosted
   Node.js 20 action runtime removal.
+- Disabled persisted checkout credentials in hosted validation.
 - Guarded empty line strings in `resample.ToInterval` before distance
   precomputation and callback execution.
 
