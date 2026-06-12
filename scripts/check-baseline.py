@@ -8,7 +8,9 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = "docs/plans/2026-06-08-orb-go-module-baseline.md"
+HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
 REQUIRED = [
+    ".github/workflows/check.yml",
     ".gitignore",
     "CHANGES.md",
     "Makefile",
@@ -29,6 +31,8 @@ REQUIRED = [
     "docs/plans/2026-06-09-planar-empty-containment.md",
     "docs/plans/2026-06-09-zero-area-bound-contract.md",
     "docs/plans/2026-06-10-multipolygon-empty-bound.md",
+    "docs/plans/2026-06-10-resample-empty-interval.md",
+    HOSTED_VALIDATION_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -61,9 +65,10 @@ def main():
     makefile = read("Makefile")
     for phrase in [
         "go test ./...",
+        "go test -race ./...",
         "go vet ./...",
         "python3 scripts/check-baseline.py",
-        "check: test lint static-check",
+        "check: test race lint static-check",
         "lint: vet",
         "build: test",
         "verify: check",
@@ -133,6 +138,15 @@ def main():
         failures.append("multi line string tests must cover leading empty bounds")
     if "TestMultiPolygon_BoundSkipsLeadingEmptyPolygon" not in multi_polygon_tests:
         failures.append("multi polygon tests must cover leading empty polygon bounds")
+    resample = read("resample/line_string.go")
+    resample_tests = read("resample/line_string_test.go")
+    interval_start = resample.find("func ToInterval")
+    interval_guard = resample.find("if len(ls) <= 1", interval_start)
+    distance_setup = resample.find("total, dists := precomputeDistances(ls, df)", interval_start)
+    if interval_guard == -1 or distance_setup == -1 or interval_guard > distance_setup:
+        failures.append("ToInterval must guard empty line strings before distance precomputation")
+    if "TestToIntervalEmptyLineString" not in resample_tests or "distance function should not be called" not in resample_tests:
+        failures.append("resample tests must cover empty interval input before distance calls")
     simplify_helpers = read("simplify/helpers.go")
     simplify_tests = read("simplify/helpers_test.go")
     if "len(p) == 0" not in simplify_helpers or "len(p[0]) <= 2" not in simplify_helpers:
@@ -171,6 +185,9 @@ def main():
         "empty rings and polygons",
         "zero-area bounds",
         "leading empty polygons",
+        "empty interval resampling",
+        "race detector",
+        "hosted Linux",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -217,6 +234,26 @@ def main():
         or "leading empty polygons" not in multipolygon_empty_bound_plan
     ):
         failures.append("multipolygon empty bound plan must record completed status and verification")
+    resample_empty_plan = read("docs/plans/2026-06-10-resample-empty-interval.md")
+    if "status: completed" not in resample_empty_plan or "ToInterval" not in resample_empty_plan:
+        failures.append("empty interval resampling plan must record completed status and verification")
+    hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
+    workflow = read(".github/workflows/check.yml")
+    if "status: completed" not in hosted_validation_plan or "go test -race ./..." not in hosted_validation_plan:
+        failures.append("hosted Go validation plan must record completed status and race verification")
+    for expected in [
+        "permissions:\n  contents: read",
+        "cancel-in-progress: true",
+        "runs-on: ubuntu-24.04",
+        "timeout-minutes: 15",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
+        'go-version: ["1.20.14", "1.25.3"]',
+        "GOTOOLCHAIN: local",
+        "run: make check",
+    ]:
+        if expected not in workflow:
+            failures.append(f"Check workflow must keep {expected}")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")
