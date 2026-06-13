@@ -10,7 +10,7 @@ the final patch release in that line. Changes must not introduce syntax,
 standard-library APIs, build constraints, or module behavior unavailable to
 that lane without an explicit support-policy change.
 
-The fixed Go 1.25.3 lane is modern-toolchain validation. It catches newer
+The fixed Go 1.25.11 lane is patched modern-toolchain validation. It catches newer
 compiler, vet, race-detector, and module behavior, but it does not raise the
 declared minimum or promise automatic support for every newer Go release.
 
@@ -41,6 +41,6 @@ schema, generated diff, fixture impact, and module graph together.
 
 Support-policy, module, dependency, generated-code, and exported API changes
 must pass the canonical tests, race detector, vet, build, module verification,
-and sparse baseline on both fixed Go 1.20.14 and Go 1.25.3 toolchains. A newer
+and sparse baseline on both fixed Go 1.20.14 and Go 1.25.11 toolchains. A newer
 toolchain may be evaluated separately, but it does not replace either required
 lane until the support contract and hosted matrix are deliberately updated.

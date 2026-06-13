@@ -98,10 +98,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `go vet ./...`
 - `python3 scripts/check-baseline.py`
 - Pinned hosted Linux validation uses a read-only, credential-free checkout and
-  runs the full gate, including the race detector, on Go 1.20.14 and Go 1.25.3
+  runs the full gate, including the race detector, on Go 1.20.14 and Go 1.25.11
   with toolchain auto-upgrades disabled.
 - Go 1.20 is the declared compatibility minimum; Go 1.20.14 is its fixed final
-  patch lane, while Go 1.25.3 is modern-toolchain validation rather than a
+  patch lane, while Go 1.25.11 is patched modern-toolchain validation rather than a
   raised minimum or blanket promise for future releases.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

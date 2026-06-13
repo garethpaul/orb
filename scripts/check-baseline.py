@@ -13,6 +13,7 @@ HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
 POLYGON_DISTANCE_INDEX_PLAN = "docs/plans/2026-06-12-polygon-distance-ring-index.md"
 CHECKOUT_CREDENTIAL_PLAN = "docs/plans/2026-06-12-checkout-credential-boundary.md"
 GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
+PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -41,6 +42,7 @@ REQUIRED = [
     POLYGON_DISTANCE_INDEX_PLAN,
     CHECKOUT_CREDENTIAL_PLAN,
     GO_SUPPORT_PLAN,
+    PATCHED_MODERN_LANE_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -246,7 +248,7 @@ def main():
         "Review date: 2026-06-13",
         "Go 1.20 is therefore the language and module compatibility minimum",
         "fixed Go 1.20.14 lane",
-        "fixed Go 1.25.3 lane is modern-toolchain validation",
+        "fixed Go 1.25.11 lane is patched modern-toolchain validation",
         "does not raise the declared minimum",
         "GOTOOLCHAIN=local",
         "intentionally has no `toolchain` directive",
@@ -257,10 +259,25 @@ def main():
         "direct and transitive graph changes",
         "generated Go source",
         "rather than hand-editing generated output",
-        "both fixed Go 1.20.14 and Go 1.25.3 toolchains",
+        "both fixed Go 1.20.14 and Go 1.25.11 toolchains",
     ]:
         if phrase not in go_support:
             failures.append(f"Go support contract must include {phrase}")
+
+    current_support_claims = {
+        "README.md": [
+            "Go 1.20.14 and Go 1.25.11",
+            "Go 1.25.11 is patched modern-toolchain validation",
+        ],
+        "SECURITY.md": ["patched Go 1.25.11 toolchain"],
+        "VISION.md": ["Go 1.20.14 and patched Go 1.25.11 validation"],
+        "CHANGES.md": ["fixed 1.20.14 and patched 1.25.11 validation roles"],
+    }
+    for path, phrases in current_support_claims.items():
+        content = " ".join(read(path).split())
+        for phrase in phrases:
+            if phrase not in content:
+                failures.append(f"{path} must include {phrase}")
 
     plan = read(PLAN)
     if "status: completed" not in plan or "go test ./..." not in plan or "go vet ./..." not in plan:
@@ -352,7 +369,7 @@ def main():
         "timeout-minutes: 15",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
-        'go-version: ["1.20.14", "1.25.3"]',
+        'go-version: ["1.20.14", "1.25.11"]',
         "GOTOOLCHAIN: local",
         "run: make check",
     ]:
@@ -424,6 +441,31 @@ def main():
     ]:
         if evidence not in go_support_verification:
             failures.append(f"Go support verification must record {evidence}")
+
+    patched_lane_plan = read(PATCHED_MODERN_LANE_PLAN)
+    patched_lane_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", patched_lane_plan)
+    patched_lane_work = markdown_section(patched_lane_plan, "Work Completed")
+    patched_lane_verification = markdown_section(patched_lane_plan, "Verification Completed")
+    if patched_lane_status != ["completed"] or not patched_lane_work:
+        failures.append(
+            "patched modern Go lane plan must record one completed status and completed work"
+        )
+    if not patched_lane_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", patched_lane_verification
+    ):
+        failures.append("patched modern Go lane plan must record completed verification")
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.11 make check",
+        "GOTOOLCHAIN=go1.20.14 go mod verify",
+        "GOTOOLCHAIN=go1.25.11 go mod verify",
+        "govulncheck",
+        "workflow YAML",
+        "hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in patched_lane_verification:
+            failures.append(f"patched modern Go lane verification must record {evidence}")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

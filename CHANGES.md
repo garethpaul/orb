@@ -2,7 +2,7 @@
 
 ## 2026-06-13
 
-- Documented the Go 1.20 compatibility minimum, fixed 1.20.14 and 1.25.3
+- Documented the Go 1.20 compatibility minimum, fixed 1.20.14 and patched 1.25.11
   validation roles, local-toolchain boundary, module-path stability,
   dependency-integrity checks, and generated protobuf expectations.
 

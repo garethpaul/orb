@@ -48,7 +48,7 @@ and projection edge cases. Run `make check`, `make lint`, `make build`,
 protobuf code, or fixture data.
 The canonical gate also runs the Go race detector, and pinned hosted Linux jobs
 use credential-free checkout while exercising both the declared Go 1.20
-baseline and the newer Go 1.25 toolchain.
+baseline and the patched Go 1.25.11 toolchain.
 The Go support contract requires `GOTOOLCHAIN=local`, no checked-in `toolchain`
 directive, synchronized module checksums, `go mod verify`, and review of direct
 and transitive dependency changes on both fixed toolchains.

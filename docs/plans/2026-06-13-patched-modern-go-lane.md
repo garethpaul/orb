@@ -1,6 +1,6 @@
 # Patched Modern Go Lane
 
-status: pending
+status: completed
 
 ## Context
 
@@ -29,8 +29,26 @@ older toolchain.
 
 ## Work Completed
 
-Pending implementation.
+- Pinned the active hosted modern-toolchain lane to Go 1.25.11 while retaining
+  Go 1.20.14 as the compatibility lane and `GOTOOLCHAIN=local` as the hosted
+  toolchain-selection boundary.
+- Updated current support, security, roadmap, release-note, and contributor
+  guidance to distinguish the patched modern lane from the declared minimum.
+- Extended the sparse baseline checker to enforce the active workflow and
+  documentation contract plus this completed plan's mutation-sensitive
+  evidence, without rewriting historical Go 1.25.3 records.
 
 ## Verification Completed
 
-Pending implementation and validation.
+- `GOTOOLCHAIN=go1.20.14 make check`
+- `GOTOOLCHAIN=go1.25.11 make check`
+- `GOTOOLCHAIN=go1.20.14 go mod verify`
+- `GOTOOLCHAIN=go1.25.11 go mod verify`
+- `GOTOOLCHAIN=go1.25.11 go run golang.org/x/vuln/cmd/govulncheck@latest ./...`
+  reported no vulnerabilities.
+- Parsed the workflow YAML and compiled the Python baseline checker.
+- Confirmed hostile mutations to the workflow, support contract, checker, and
+  completed-plan evidence are rejected.
+- `git diff --check`
+- Reviewed the exact diff and scanned intended paths for secrets and generated
+  artifacts; no source, dependency, protobuf, or fixture files changed.
