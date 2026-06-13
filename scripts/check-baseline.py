@@ -14,6 +14,7 @@ POLYGON_DISTANCE_INDEX_PLAN = "docs/plans/2026-06-12-polygon-distance-ring-index
 CHECKOUT_CREDENTIAL_PLAN = "docs/plans/2026-06-12-checkout-credential-boundary.md"
 GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
 PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
+LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-make-gates.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -43,6 +44,7 @@ REQUIRED = [
     CHECKOUT_CREDENTIAL_PLAN,
     GO_SUPPORT_PLAN,
     PATCHED_MODERN_LANE_PLAN,
+    LOCATION_INDEPENDENT_MAKE_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -84,10 +86,11 @@ def main():
 
     makefile = read("Makefile")
     for phrase in [
-        "go test ./...",
-        "go test -race ./...",
-        "go vet ./...",
-        "python3 scripts/check-baseline.py",
+        "override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        'cd "$(REPO_ROOT)" && go test ./...',
+        'cd "$(REPO_ROOT)" && go test -race ./...',
+        'cd "$(REPO_ROOT)" && go vet ./...',
+        'python3 "$(REPO_ROOT)/scripts/check-baseline.py"',
         "check: test race lint static-check",
         "lint: vet",
         "build: test",
@@ -239,6 +242,7 @@ def main():
         "go mod verify",
         "breaking import migration",
         "generated Go source",
+        "absolute Makefile path works from another directory",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
@@ -271,7 +275,10 @@ def main():
         ],
         "SECURITY.md": ["patched Go 1.25.11 toolchain"],
         "VISION.md": ["Go 1.20.14 and patched Go 1.25.11 validation"],
-        "CHANGES.md": ["fixed 1.20.14 and patched 1.25.11 validation roles"],
+        "CHANGES.md": [
+            "fixed 1.20.14 and patched 1.25.11 validation roles",
+            "absolute-Makefile calls from external directories",
+        ],
     }
     for path, phrases in current_support_claims.items():
         content = " ".join(read(path).split())
@@ -466,6 +473,50 @@ def main():
     ]:
         if evidence not in patched_lane_verification:
             failures.append(f"patched modern Go lane verification must record {evidence}")
+
+    location_make_plan = read(LOCATION_INDEPENDENT_MAKE_PLAN)
+    location_make_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", location_make_plan
+    )
+    location_make_work = markdown_section(location_make_plan, "Work Completed")
+    location_make_verification = markdown_section(
+        location_make_plan, "Verification Completed"
+    )
+    if location_make_status != ["completed"] or not location_make_work:
+        failures.append(
+            "location-independent Make plan must record one completed status "
+            "and completed work"
+        )
+    if not location_make_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", location_make_verification
+    ):
+        failures.append(
+            "location-independent Make plan must record completed verification"
+        )
+    for evidence in [
+        "make test",
+        "make race",
+        "make lint",
+        "make build",
+        "make static-check",
+        "make verify",
+        "make check",
+        "GOTOOLCHAIN=go1.20.14",
+        "GOTOOLCHAIN=go1.25.11",
+        "from `/tmp`",
+        "absolute",
+        "caller-supplied",
+        "REPO_ROOT=/tmp",
+        "GOTOOLCHAIN=go1.20.14 go mod verify",
+        "GOTOOLCHAIN=go1.25.11 go mod verify",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "workflow YAML parsed successfully",
+        "Twelve isolated hostile mutations were rejected",
+    ]:
+        if evidence not in location_make_verification:
+            failures.append(
+                f"location-independent Make verification must record {evidence}"
+            )
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

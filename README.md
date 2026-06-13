@@ -67,6 +67,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   protobuf code, or fixture data.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go
   vet, build-through-test, and full verification gates.
+- Standard Make aliases resolve Go and checker paths from `Makefile`, so an
+  absolute Makefile path works from another directory without changing gates.
 - Core ring helpers treat degenerate rings as non-closed or zero-orientation
   inputs instead of panicking.
 - `LineString.Reverse` handles empty line strings without panicking.

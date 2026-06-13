@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Made every standard Make gate resolve Go module and checker paths from the
+  repository root, including absolute-Makefile calls from external directories.
 - Documented the Go 1.20 compatibility minimum, fixed 1.20.14 and patched 1.25.11
   validation roles, local-toolchain boundary, module-path stability,
   dependency-integrity checks, and generated protobuf expectations.
