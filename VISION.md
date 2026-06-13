@@ -44,10 +44,11 @@ Priority:
 - Keep the race detector in the canonical verification gate
 - Keep fixed Go 1.20 and Go 1.25 validation in pinned, read-only,
   credential-free hosted Linux CI
+- Keep the Go compatibility minimum, modern validation lane, module path,
+  toolchain-selection boundary, and generated-code expectations explicit
 
 Next priorities:
 
-- Document supported Go versions and module expectations
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
 - Add resampling fixtures for empty, single-point, and zero-length lines

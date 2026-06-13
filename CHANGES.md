@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-13
+
+- Documented the Go 1.20 compatibility minimum, fixed 1.20.14 and 1.25.3
+  validation roles, local-toolchain boundary, module-path stability,
+  dependency-integrity checks, and generated protobuf expectations.
+
 ## 2026-06-12
 
 - Disabled checkout credential persistence in the pinned, read-only hosted

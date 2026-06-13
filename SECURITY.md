@@ -49,6 +49,9 @@ protobuf code, or fixture data.
 The canonical gate also runs the Go race detector, and pinned hosted Linux jobs
 use credential-free checkout while exercising both the declared Go 1.20
 baseline and the newer Go 1.25 toolchain.
+The Go support contract requires `GOTOOLCHAIN=local`, no checked-in `toolchain`
+directive, synchronized module checksums, `go mod verify`, and review of direct
+and transitive dependency changes on both fixed toolchains.
 Degenerate rings should remain panic-resistant because geometry libraries are
 often used in data pipelines that receive malformed input.
 Empty line strings should also remain panic-resistant in helper methods such as

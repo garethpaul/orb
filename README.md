@@ -58,6 +58,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Import packages using the module path `github.com/paulmach/orb`.
+- Read [`docs/go-support.md`](docs/go-support.md) before changing the minimum Go
+  version, module path, dependency graph, generated protobuf surfaces, or fixed
+  hosted toolchains.
 - This repository is a library, not a standalone service. Start with the package
   READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
 - Run `make check` before changing geometry algorithms, encoders, generated
@@ -97,6 +100,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Pinned hosted Linux validation uses a read-only, credential-free checkout and
   runs the full gate, including the race detector, on Go 1.20.14 and Go 1.25.3
   with toolchain auto-upgrades disabled.
+- Go 1.20 is the declared compatibility minimum; Go 1.20.14 is its fixed final
+  patch lane, while Go 1.25.3 is modern-toolchain validation rather than a
+  raised minimum or blanket promise for future releases.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

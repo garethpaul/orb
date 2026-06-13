@@ -12,6 +12,7 @@ PLAN = "docs/plans/2026-06-08-orb-go-module-baseline.md"
 HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
 POLYGON_DISTANCE_INDEX_PLAN = "docs/plans/2026-06-12-polygon-distance-ring-index.md"
 CHECKOUT_CREDENTIAL_PLAN = "docs/plans/2026-06-12-checkout-credential-boundary.md"
+GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -21,6 +22,7 @@ REQUIRED = [
     "SECURITY.md",
     "VISION.md",
     "docs/readme-overview.svg",
+    "docs/go-support.md",
     "go.mod",
     "go.sum",
     PLAN,
@@ -38,6 +40,7 @@ REQUIRED = [
     HOSTED_VALIDATION_PLAN,
     POLYGON_DISTANCE_INDEX_PLAN,
     CHECKOUT_CREDENTIAL_PLAN,
+    GO_SUPPORT_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -69,6 +72,8 @@ def main():
     ]:
         if phrase not in go_mod:
             failures.append(f"go.mod must include {phrase}")
+    if re.search(r"(?m)^toolchain\s+", go_mod):
+        failures.append("go.mod must not force an automatic toolchain switch")
 
     go_sum = read("go.sum")
     for phrase in ["github.com/gogo/protobuf v1.3.2", "github.com/pkg/errors v0.9.1"]:
@@ -197,7 +202,12 @@ def main():
         if phrase not in planar_contains_tests:
             failures.append(f"planar containment tests must include {phrase}")
 
-    docs = "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md"])
+    docs = " ".join(
+        "\n".join(
+            read(path)
+            for path in ["README.md", "SECURITY.md", "VISION.md", "docs/go-support.md"]
+        ).split()
+    )
     for phrase in [
         "make check",
         "make lint",
@@ -221,9 +231,36 @@ def main():
         "polygon ring index",
         "race detector",
         "hosted Linux",
+        "Go compatibility minimum",
+        "modern-toolchain validation",
+        "GOTOOLCHAIN=local",
+        "go mod verify",
+        "breaking import migration",
+        "generated Go source",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
+
+    go_support = " ".join(read("docs/go-support.md").split())
+    for phrase in [
+        "Review date: 2026-06-13",
+        "Go 1.20 is therefore the language and module compatibility minimum",
+        "fixed Go 1.20.14 lane",
+        "fixed Go 1.25.3 lane is modern-toolchain validation",
+        "does not raise the declared minimum",
+        "GOTOOLCHAIN=local",
+        "intentionally has no `toolchain` directive",
+        "github.com/paulmach/orb",
+        "breaking import migration",
+        "go.mod` and `go.sum` synchronized",
+        "go mod verify",
+        "direct and transitive graph changes",
+        "generated Go source",
+        "rather than hand-editing generated output",
+        "both fixed Go 1.20.14 and Go 1.25.3 toolchains",
+    ]:
+        if phrase not in go_support:
+            failures.append(f"Go support contract must include {phrase}")
 
     plan = read(PLAN)
     if "status: completed" not in plan or "go test ./..." not in plan or "go vet ./..." not in plan:
@@ -361,6 +398,32 @@ def main():
             "checkout credential plan must record one completed status, "
             "completed work, and make check verification"
         )
+
+    go_support_plan = read(GO_SUPPORT_PLAN)
+    go_support_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", go_support_plan)
+    go_support_work = markdown_section(go_support_plan, "Work Completed")
+    go_support_verification = markdown_section(go_support_plan, "Verification Completed")
+    if go_support_status != ["completed"] or not go_support_work:
+        failures.append(
+            "Go support plan must record one completed status and completed work"
+        )
+    if not go_support_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", go_support_verification
+    ):
+        failures.append("Go support plan must record completed verification")
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.3 make check",
+        "GOTOOLCHAIN=go1.20.14 go mod verify",
+        "GOTOOLCHAIN=go1.25.3 go mod verify",
+        "external working directory",
+        "workflow YAML",
+        "hostile mutations rejected",
+        "git diff --check",
+        "secret and generated-artifact scan",
+    ]:
+        if evidence not in go_support_verification:
+            failures.append(f"Go support verification must record {evidence}")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

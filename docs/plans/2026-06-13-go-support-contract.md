@@ -1,6 +1,6 @@
 # Go Support Contract
 
-status: planned
+status: completed
 
 ## Context
 
@@ -52,3 +52,22 @@ allowed, or which module and generated-code surfaces must remain stable.
 - run focused hostile mutations against the support contract
 - `git diff --check`
 - scan the intended diff for secrets and generated artifacts
+
+## Work Completed
+
+Documented the declared minimum, fixed compatibility and modern validation
+lanes, local-toolchain boundary, module-path stability, dependency integrity,
+and generated protobuf expectations without changing those surfaces.
+
+## Verification Completed
+
+- `GOTOOLCHAIN=go1.20.14 make check` and `GOTOOLCHAIN=go1.25.3 make check`
+  passed.
+- `GOTOOLCHAIN=go1.20.14 go mod verify` and
+  `GOTOOLCHAIN=go1.25.3 go mod verify` passed.
+- The checker passed from an external working directory, and workflow YAML
+  parsed successfully.
+- Ten focused hostile mutations rejected weakened support-contract and plan
+  evidence; `hostile mutations rejected` was verified explicitly.
+- `git diff --check` and the intended-diff secret and generated-artifact scan
+  passed.
