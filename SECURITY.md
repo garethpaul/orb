@@ -66,6 +66,9 @@ Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
 Empty interval resampling should return before allocating segment distances or
 calling caller-provided distance functions.
+Non-finite interval distances should be rejected before distance callbacks or
+point-count conversion so malformed numeric input cannot trigger a panic or
+unexpected allocation.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 Polygon distance indices should identify the matching immediate ring rather

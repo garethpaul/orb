@@ -3,6 +3,8 @@
 package resample
 
 import (
+	"math"
+
 	"github.com/paulmach/orb"
 )
 
@@ -27,7 +29,7 @@ func Resample(ls orb.LineString, df orb.DistanceFunc, totalPoints int) orb.LineS
 // about the given distance.
 // This function will modify the linestring input.
 func ToInterval(ls orb.LineString, df orb.DistanceFunc, dist float64) orb.LineString {
-	if dist <= 0 {
+	if dist <= 0 || math.IsNaN(dist) || math.IsInf(dist, 0) {
 		return nil
 	}
 	if len(ls) <= 1 {

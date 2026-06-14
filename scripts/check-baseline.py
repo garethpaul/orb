@@ -15,6 +15,7 @@ CHECKOUT_CREDENTIAL_PLAN = "docs/plans/2026-06-12-checkout-credential-boundary.m
 GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
 PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-make-gates.md"
+NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -45,6 +46,7 @@ REQUIRED = [
     GO_SUPPORT_PLAN,
     PATCHED_MODERN_LANE_PLAN,
     LOCATION_INDEPENDENT_MAKE_PLAN,
+    NONFINITE_INTERVAL_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -164,12 +166,34 @@ def main():
     resample = read("resample/line_string.go")
     resample_tests = read("resample/line_string_test.go")
     interval_start = resample.find("func ToInterval")
+    finite_interval_guard = resample.find(
+        "if dist <= 0 || math.IsNaN(dist) || math.IsInf(dist, 0)",
+        interval_start,
+    )
     interval_guard = resample.find("if len(ls) <= 1", interval_start)
     distance_setup = resample.find("total, dists := precomputeDistances(ls, df)", interval_start)
+    if not (
+        0 <= finite_interval_guard < interval_guard < distance_setup
+    ):
+        failures.append(
+            "ToInterval must reject non-finite distances before line handling "
+            "and distance precomputation"
+        )
     if interval_guard == -1 or distance_setup == -1 or interval_guard > distance_setup:
         failures.append("ToInterval must guard empty line strings before distance precomputation")
     if "TestToIntervalEmptyLineString" not in resample_tests or "distance function should not be called" not in resample_tests:
         failures.append("resample tests must cover empty interval input before distance calls")
+    for phrase in [
+        "TestToIntervalRejectsNonFiniteDistance",
+        "math.NaN()",
+        "math.Inf(1)",
+        "math.Inf(-1)",
+        "distance function should not be called for non-finite intervals",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve non-finite interval coverage: {phrase}"
+            )
     distance_from = read("planar/distance_from.go")
     distance_from_tests = read("planar/distance_from_test.go")
     for phrase in [
@@ -233,6 +257,7 @@ def main():
         "zero-area bounds",
         "leading empty polygons",
         "empty interval resampling",
+        "non-finite interval distances",
         "polygon ring index",
         "race detector",
         "hosted Linux",
@@ -246,6 +271,12 @@ def main():
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
+
+    for path in ["README.md", "SECURITY.md", "VISION.md"]:
+        if "non-finite interval distances" not in read(path).lower():
+            failures.append(
+                f"{path} must document the non-finite interval distance boundary"
+            )
 
     go_support = " ".join(read("docs/go-support.md").split())
     for phrase in [
@@ -331,6 +362,36 @@ def main():
     resample_empty_plan = read("docs/plans/2026-06-10-resample-empty-interval.md")
     if "status: completed" not in resample_empty_plan or "ToInterval" not in resample_empty_plan:
         failures.append("empty interval resampling plan must record completed status and verification")
+    nonfinite_interval_plan = read(NONFINITE_INTERVAL_PLAN)
+    nonfinite_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", nonfinite_interval_plan
+    )
+    nonfinite_work = markdown_section(nonfinite_interval_plan, "Work Completed")
+    nonfinite_verification = markdown_section(
+        nonfinite_interval_plan, "Verification Completed"
+    )
+    if nonfinite_status != ["completed"] or not nonfinite_work:
+        failures.append(
+            "non-finite interval plan must record one completed status and completed work"
+        )
+    if not nonfinite_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", nonfinite_verification
+    ):
+        failures.append(
+            "non-finite interval plan must record completed verification"
+        )
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 go test ./resample",
+        "GOTOOLCHAIN=go1.25.11 go test ./resample",
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.11 make check",
+        "from `/tmp`",
+        "TestToIntervalRejectsNonFiniteDistance",
+    ]:
+        if evidence not in nonfinite_verification:
+            failures.append(
+                f"non-finite interval verification must record {evidence}"
+            )
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
     ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
     ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")

@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-14
+
+- Rejected non-finite `resample.ToInterval` distances before distance callback
+  execution or point-count conversion, preventing a `NaN`-driven panic.
+- Added regression and static contract coverage for `NaN` and both infinities.
+
 ## 2026-06-13
 
 - Made every standard Make gate resolve Go module and checker paths from the

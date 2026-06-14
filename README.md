@@ -84,6 +84,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   sentinels into aggregate bounds.
 - Empty interval resampling returns empty line strings before distance
   precomputation, avoiding negative slice sizes and callback execution.
+- Non-finite interval distances are rejected before distance callbacks or
+  point-count conversion, preventing malformed numeric input from panicking.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 - `planar.DistanceFromWithIndex` returns the matching polygon ring index rather
@@ -132,6 +134,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Leading empty polygons should remain safe in multipolygon bound aggregation.
 - Empty rings and polygons should be rejected by planar containment helpers
   instead of panicking.
+- Non-finite interval distances should remain rejected before resampling
+  calculations or caller-provided distance callbacks.
 
 ## Maintenance Notes
 

@@ -1,6 +1,7 @@
 package resample
 
 import (
+	"math"
 	"testing"
 
 	"github.com/paulmach/orb"
@@ -137,6 +138,37 @@ func TestToIntervalEmptyLineString(t *testing.T) {
 	}
 	if distanceCalled {
 		t.Fatal("distance function should not be called for short line strings")
+	}
+}
+
+func TestToIntervalRejectsNonFiniteDistance(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 10}}
+
+	for _, tc := range []struct {
+		name     string
+		distance float64
+	}{
+		{name: "NaN", distance: math.NaN()},
+		{name: "positive infinity", distance: math.Inf(1)},
+		{name: "negative infinity", distance: math.Inf(-1)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			distanceCalled := false
+			distance := func(a, b orb.Point) float64 {
+				distanceCalled = true
+				return planar.Distance(a, b)
+			}
+
+			if result := ToInterval(line, distance, tc.distance); result != nil {
+				t.Fatalf("non-finite interval should return nil: %v", result)
+			}
+			if result := ToInterval(orb.LineString{{0, 0}}, distance, tc.distance); result != nil {
+				t.Fatalf("non-finite interval should be rejected before short-line handling: %v", result)
+			}
+			if distanceCalled {
+				t.Fatal("distance function should not be called for non-finite intervals")
+			}
+		})
 	}
 }
 
