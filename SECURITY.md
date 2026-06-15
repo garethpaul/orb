@@ -74,6 +74,8 @@ allocation when interval division is nonfinite or exceeds the platform integer
 range.
 Negative derived point counts from caller distance callbacks should fail closed
 before conversion or allocation.
+Non-finite callback distances should fail closed before either resampling path
+interpolates or allocates output points.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 Polygon distance indices should identify the matching immediate ring rather

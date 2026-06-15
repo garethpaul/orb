@@ -1,6 +1,6 @@
 # Non-Finite Resample Callback Distance
 
-status: planned
+status: completed
 
 ## Context
 
@@ -58,3 +58,24 @@ and completed verification without changing module or generated-code paths.
 - Do not impose a new general point-count cap or change valid interpolation.
 - Do not redefine negative finite callback distances beyond the existing
   derived-point-count behavior.
+
+## Work Completed
+
+- Validated every precomputed segment distance and returned an explicit
+  validity result to both public resampling entry points.
+- Returned `nil` before interpolation or output allocation when a callback
+  produced `NaN` or either infinity.
+- Added shared no-panic regression coverage, static contracts, and synchronized
+  project guidance.
+
+## Verification Completed
+
+- `TestResampleRejectsNonFiniteCallbackDistance` and the complete resample
+  package passed on Go 1.20.14 and Go 1.25.11.
+- Both Go lanes passed `make check`, including tests, race tests, vet, and the
+  static baseline; the absolute Makefile gate passed from an external working directory.
+- `go mod verify` and `go build ./...` passed on both supported Go lanes.
+- Six isolated hostile mutations covering callback validation, both public
+  guards, focused tests, guidance, and completed plan evidence were rejected.
+- `git diff --check` plus gofmt, generated-artifact, dependency, credential,
+  binary, mode, and intended-path audits passed.

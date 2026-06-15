@@ -18,6 +18,7 @@ LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-mak
 NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
 DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
 NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.md"
+NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -51,6 +52,7 @@ REQUIRED = [
     NONFINITE_INTERVAL_PLAN,
     DERIVED_POINT_COUNT_PLAN,
     NEGATIVE_POINT_COUNT_PLAN,
+    NONFINITE_CALLBACK_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -175,7 +177,7 @@ def main():
         interval_start,
     )
     interval_guard = resample.find("if len(ls) <= 1", interval_start)
-    distance_setup = resample.find("total, dists := precomputeDistances(ls, df)", interval_start)
+    distance_setup = resample.find("total, dists, ok := precomputeDistances(ls, df)", interval_start)
     point_count_setup = resample.find("pointCount := total / dist", distance_setup)
     point_count_guard = resample.find(
         "math.IsNaN(pointCount) || math.IsInf(pointCount, 0)", point_count_setup
@@ -190,6 +192,24 @@ def main():
         )
     if interval_guard == -1 or distance_setup == -1 or interval_guard > distance_setup:
         failures.append("ToInterval must guard empty line strings before distance precomputation")
+    resample_start = resample.find("func Resample")
+    resample_distance_setup = resample.find(
+        "total, dists, ok := precomputeDistances(ls, df)", resample_start
+    )
+    callback_guard = resample.find("if !ok", resample_distance_setup)
+    interval_callback_guard = resample.find("if !ok", distance_setup)
+    precompute_start = resample.find("func precomputeDistances")
+    callback_validation = resample.find(
+        "math.IsNaN(dists[i]) || math.IsInf(dists[i], 0)", precompute_start
+    )
+    if not (
+        0 <= resample_distance_setup < callback_guard < interval_start
+        and distance_setup < interval_callback_guard < point_count_setup
+        and precompute_start < callback_validation
+    ):
+        failures.append(
+            "both resample entry points must reject non-finite callback distances"
+        )
     if not (
         distance_setup < point_count_setup < point_count_guard < point_count_conversion
         and "pointCount < 0" in resample
@@ -211,6 +231,15 @@ def main():
         if phrase not in resample_tests:
             failures.append(
                 f"resample tests must preserve non-finite interval coverage: {phrase}"
+            )
+    for phrase in [
+        "TestResampleRejectsNonFiniteCallbackDistance",
+        "non-finite callback distance should return nil from Resample",
+        "non-finite callback distance should return nil from ToInterval",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve non-finite callback coverage: {phrase}"
             )
     for phrase in [
         "TestToIntervalRejectsNegativeDerivedPointCount",
@@ -296,6 +325,7 @@ def main():
         "non-finite interval distances",
         "derived point counts",
         "negative derived point counts",
+        "non-finite callback distances",
         "polygon ring index",
         "race detector",
         "hosted Linux",
@@ -316,6 +346,8 @@ def main():
         failures.append("all guidance must document the derived point-count boundary")
     if not all("negative derived point counts" in document for document in interval_guidance):
         failures.append("all guidance must document the negative point-count boundary")
+    if not all("non-finite callback distances" in document for document in interval_guidance):
+        failures.append("all guidance must document the non-finite callback boundary")
 
     for path in ["README.md", "SECURITY.md", "VISION.md"]:
         if "non-finite interval distances" not in read(path).lower():
@@ -491,6 +523,35 @@ def main():
     ]:
         if evidence not in negative_point_verification:
             failures.append(f"negative point-count verification must record {evidence}")
+    nonfinite_callback_plan = read(NONFINITE_CALLBACK_PLAN)
+    nonfinite_callback_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", nonfinite_callback_plan
+    )
+    nonfinite_callback_work = markdown_section(
+        nonfinite_callback_plan, "Work Completed"
+    )
+    nonfinite_callback_verification = markdown_section(
+        nonfinite_callback_plan, "Verification Completed"
+    )
+    if (nonfinite_callback_status != ["completed"] or not nonfinite_callback_work or
+            not nonfinite_callback_verification or re.search(
+                r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                nonfinite_callback_verification,
+            )):
+        failures.append("non-finite callback plan must record completed verification")
+    for evidence in [
+        "TestResampleRejectsNonFiniteCallbackDistance",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "make check",
+        "external working directory",
+        "go mod verify",
+        "go build ./...",
+        "isolated hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in nonfinite_callback_verification:
+            failures.append(f"non-finite callback verification must record {evidence}")
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
     ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
     ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")

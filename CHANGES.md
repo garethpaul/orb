@@ -6,6 +6,8 @@
   before integer conversion and output allocation.
 - Rejected negative derived point counts from invalid distance callbacks before
   conversion and allocation.
+- Rejected non-finite callback distances before either resampling entry point
+  interpolates or allocates output points.
 
 ## 2026-06-14
 

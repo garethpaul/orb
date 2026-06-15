@@ -191,6 +191,32 @@ func TestToIntervalRejectsNegativeDerivedPointCount(t *testing.T) {
 	}
 }
 
+func TestResampleRejectsNonFiniteCallbackDistance(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 10}}
+
+	for _, tc := range []struct {
+		name     string
+		distance float64
+	}{
+		{name: "NaN", distance: math.NaN()},
+		{name: "positive infinity", distance: math.Inf(1)},
+		{name: "negative infinity", distance: math.Inf(-1)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			distance := func(orb.Point, orb.Point) float64 {
+				return tc.distance
+			}
+
+			if result := Resample(line.Clone(), distance, 3); result != nil {
+				t.Fatalf("non-finite callback distance should return nil from Resample: %v", result)
+			}
+			if result := ToInterval(line.Clone(), distance, 1); result != nil {
+				t.Fatalf("non-finite callback distance should return nil from ToInterval: %v", result)
+			}
+		})
+	}
+}
+
 func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls := orb.LineString{{0, 0}}
 

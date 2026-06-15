@@ -21,7 +21,10 @@ func Resample(ls orb.LineString, df orb.DistanceFunc, totalPoints int) orb.LineS
 	}
 
 	// precomputes the total distance and intermediate distances
-	total, dists := precomputeDistances(ls, df)
+	total, dists, ok := precomputeDistances(ls, df)
+	if !ok {
+		return nil
+	}
 	return resample(ls, dists, total, totalPoints)
 }
 
@@ -37,7 +40,10 @@ func ToInterval(ls orb.LineString, df orb.DistanceFunc, dist float64) orb.LineSt
 	}
 
 	// precomputes the total distance and intermediate distances
-	total, dists := precomputeDistances(ls, df)
+	total, dists, ok := precomputeDistances(ls, df)
+	if !ok {
+		return nil
+	}
 
 	pointCount := total / dist
 	maxInt := int(^uint(0) >> 1)
@@ -136,13 +142,16 @@ func resampleEdgeCases(ls orb.LineString, totalPoints int) (orb.LineString, bool
 }
 
 // precomputeDistances precomputes the total distance and intermediate distances.
-func precomputeDistances(ls orb.LineString, df orb.DistanceFunc) (float64, []float64) {
+func precomputeDistances(ls orb.LineString, df orb.DistanceFunc) (float64, []float64, bool) {
 	total := 0.0
 	dists := make([]float64, len(ls)-1)
 	for i := 0; i < len(ls)-1; i++ {
 		dists[i] = df(ls[i], ls[i+1])
+		if math.IsNaN(dists[i]) || math.IsInf(dists[i], 0) {
+			return 0, nil, false
+		}
 		total += dists[i]
 	}
 
-	return total, dists
+	return total, dists, true
 }
