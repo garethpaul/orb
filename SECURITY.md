@@ -78,6 +78,8 @@ Non-finite callback distances and callback-derived cumulative totals should
 fail closed before either resampling path interpolates or allocates output points.
 Negative callback segment distances should fail closed before accumulation so
 later positive segments cannot mask invalid cumulative geometry.
+A zero callback total should fail closed before `Resample` interpolation so a
+malformed distance callback cannot prevent forward progress.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 Polygon distance indices should identify the matching immediate ring rather

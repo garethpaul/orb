@@ -47,6 +47,8 @@ Priority:
 - Keep negative derived point counts out of resampling conversion and allocation
 - Keep non-finite callback distances and cumulative totals out of both resampling entry points
 - Keep negative callback segment distances out of cumulative resampling geometry
+- Keep a zero callback total out of interpolation while preserving mixed
+  zero-length and positive callback segments
 - Keep polygon distance indices aligned with the matching immediate ring
 - Keep the race detector in the canonical verification gate
 - Keep fixed Go 1.20.14 and patched Go 1.25.11 validation in pinned, read-only,

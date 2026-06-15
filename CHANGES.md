@@ -10,6 +10,8 @@
   before either resampling entry point interpolates or allocates output points.
 - Rejected negative callback segment distances before accumulation in both
   resampling entry points.
+- Rejected a zero callback total before `Resample` interpolation while
+  preserving mixed zero-length and positive callback segments.
 
 ## 2026-06-14
 

@@ -25,6 +25,9 @@ func Resample(ls orb.LineString, df orb.DistanceFunc, totalPoints int) orb.LineS
 	if !ok {
 		return nil
 	}
+	if total == 0 {
+		return nil
+	}
 	return resample(ls, dists, total, totalPoints)
 }
 

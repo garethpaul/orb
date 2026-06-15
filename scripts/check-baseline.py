@@ -20,6 +20,7 @@ DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
 NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.md"
 NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
 NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
+ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -55,6 +56,7 @@ REQUIRED = [
     NEGATIVE_POINT_COUNT_PLAN,
     NONFINITE_CALLBACK_PLAN,
     NEGATIVE_CALLBACK_SEGMENT_PLAN,
+    ZERO_CALLBACK_TOTAL_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -591,6 +593,35 @@ def main():
     for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         if "negative callback segment distances" not in read(path).lower():
             failures.append(f"{path} must document negative callback segment distances")
+    line_string = read("resample/line_string.go")
+    line_string_tests = read("resample/line_string_test.go")
+    if "if total == 0 {\n\t\treturn nil\n\t}" not in line_string:
+        failures.append("Resample must reject a zero callback total before interpolation")
+    for test_name in [
+        "TestResampleRejectsZeroCallbackTotal",
+        "TestResamplePreservesMixedZeroCallbackSegments",
+    ]:
+        if f"func {test_name}(" not in line_string_tests:
+            failures.append(f"resample regression missing: {test_name}")
+    zero_callback_total_plan = read(ZERO_CALLBACK_TOTAL_PLAN)
+    zero_callback_total_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", zero_callback_total_plan
+    )
+    zero_callback_total_verification = markdown_section(
+        zero_callback_total_plan, "Verification Completed"
+    )
+    if (zero_callback_total_status != ["completed"] or
+            "Go 1.20.14" not in zero_callback_total_verification or
+            "Go 1.25.11" not in zero_callback_total_verification or
+            "make check" not in zero_callback_total_verification or
+            "external working directory" not in zero_callback_total_verification or
+            "isolated hostile mutations were rejected" not in zero_callback_total_verification or
+            re.search(r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                      zero_callback_total_verification)):
+        failures.append("zero callback total plan must record completed verification")
+    for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if "zero callback total" not in read(path).lower():
+            failures.append(f"{path} must document the zero callback total guard")
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
     ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
     ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")

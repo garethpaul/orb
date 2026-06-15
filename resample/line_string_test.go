@@ -240,6 +240,32 @@ func TestResampleRejectsNegativeCallbackSegmentDistance(t *testing.T) {
 	}
 }
 
+func TestResampleRejectsZeroCallbackTotal(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 5}, {0, 10}}
+	zeroDistance := func(orb.Point, orb.Point) float64 { return 0 }
+
+	if result := Resample(line.Clone(), zeroDistance, 3); result != nil {
+		t.Fatalf("zero callback total should return nil from Resample: %v", result)
+	}
+}
+
+func TestResamplePreservesMixedZeroCallbackSegments(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 5}, {0, 10}}
+	calls := 0
+	mixedDistance := func(orb.Point, orb.Point) float64 {
+		calls++
+		if calls == 1 {
+			return 0
+		}
+		return 10
+	}
+
+	expected := orb.LineString{{0, 0}, {0, 7.5}, {0, 10}}
+	if result := Resample(line.Clone(), mixedDistance, 3); !result.Equal(expected) {
+		t.Fatalf("mixed zero callback segments should remain supported: %v != %v", result, expected)
+	}
+}
+
 func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls := orb.LineString{{0, 0}}
 

@@ -1,6 +1,6 @@
 # Zero Callback Total Guard
 
-Status: planned
+Status: completed
 
 ## Problem
 
@@ -35,3 +35,23 @@ segment distances remain zero and the interpolation loop cannot make progress.
   change.
 - The change must remain stacked on PR #12; neither pull request may be merged
   or closed without explicit owner authorization.
+
+## Work Completed
+
+- Rejected an all-zero callback-derived total before `Resample` enters its
+  interpolation loop.
+- Added regressions for all-zero rejection and continued support for mixed
+  zero-length and positive callback segments.
+- Added a mutation-sensitive static contract and synchronized project
+  guidance.
+
+## Verification Completed
+
+- Focused resample tests and full tests passed on Go 1.20.14 and Go 1.25.11.
+- Race, vet, `go build ./...`, and `go mod verify` passed on both pinned lanes.
+- Full `make check` and the absolute-Makefile check from an external working directory
+  passed on both pinned lanes.
+- Six isolated hostile mutations were rejected for the missing or weakened total
+  guard, either public regression, missing guidance, and stale plan status.
+- Gofmt, exact diff, artifact, dependency/generated-code, credential,
+  conflict-marker, binary, mode, whitespace, and intended-path audits passed.

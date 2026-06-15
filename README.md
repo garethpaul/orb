@@ -65,6 +65,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
 - Run `make check` before changing geometry algorithms, encoders, generated
   protobuf code, or fixture data.
+- `resample.Resample` rejects an all-zero callback total before interpolation,
+  while preserving mixed zero-length and positive callback segments.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go
   vet, build-through-test, and full verification gates.
 - Standard Make aliases resolve Go and checker paths from `Makefile`, so an
