@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-15
+
+- Rejected nonfinite or integer-overflowing derived `ToInterval` point counts
+  before integer conversion and output allocation.
+
 ## 2026-06-14
 
 - Rejected non-finite `resample.ToInterval` distances before distance callback

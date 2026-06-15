@@ -1,6 +1,6 @@
 # Derived Point Count Guard
 
-status: planned
+status: completed
 
 ## Summary
 
@@ -47,3 +47,28 @@ allocating its output slice.
   representable requests; callers remain responsible for practical intervals.
 - The change must remain stacked on PR #8 and must not be merged or closed
   without explicit owner authorization.
+
+## Work Completed
+
+- Validated the derived `total / dist` quotient before integer conversion.
+- Rejected NaN, infinity, and values that cannot leave room for the final
+  point in the platform `int` range.
+- Added a smallest-positive-interval regression, ordering contracts, and
+  consistent maintenance guidance.
+
+## Verification Completed
+
+- Focused `TestToIntervalRejectsUnrepresentablePointCount` and nonfinite
+  interval tests passed under Go 1.20.14 and Go 1.25.11.
+- `GOTOOLCHAIN=go1.20.14 make check` and
+  `GOTOOLCHAIN=go1.25.11 make check` passed tests, race tests, vet, and the
+  static baseline; the external working directory gate also passed.
+- `go mod verify` and `go build ./...` passed under both maintained lanes.
+- `govulncheck ./...` under Go 1.25.11 reported no vulnerabilities using the
+  existing cached tool binary.
+- Six isolated hostile mutations removing quotient finiteness, ordering,
+  platform integer bounds, regression coverage, guidance, or completed plan
+  status were rejected.
+- `git diff --check`, exact-diff, generated-artifact, conflict-marker,
+  intended-path, dependency/generated-code, binary/large-file, and changed-line
+  credential audits passed.

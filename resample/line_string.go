@@ -39,7 +39,12 @@ func ToInterval(ls orb.LineString, df orb.DistanceFunc, dist float64) orb.LineSt
 	// precomputes the total distance and intermediate distances
 	total, dists := precomputeDistances(ls, df)
 
-	totalPoints := int(total/dist) + 1
+	pointCount := total / dist
+	maxInt := int(^uint(0) >> 1)
+	if math.IsNaN(pointCount) || math.IsInf(pointCount, 0) || pointCount >= float64(maxInt) {
+		return nil
+	}
+	totalPoints := int(pointCount) + 1
 	ls, ret := resampleEdgeCases(ls, totalPoints)
 	if ret {
 		return ls

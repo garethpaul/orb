@@ -42,6 +42,8 @@ Priority:
 - Keep empty interval resampling safe before distance precomputation
 - Keep non-finite interval distances out of resampling calculations and
   caller-provided distance callbacks
+- Keep nonfinite and integer-overflowing derived point counts out of resampling
+  allocation
 - Keep polygon distance indices aligned with the matching immediate ring
 - Keep the race detector in the canonical verification gate
 - Keep fixed Go 1.20.14 and patched Go 1.25.11 validation in pinned, read-only,

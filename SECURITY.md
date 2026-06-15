@@ -69,6 +69,9 @@ calling caller-provided distance functions.
 Non-finite interval distances should be rejected before distance callbacks or
 point-count conversion so malformed numeric input cannot trigger a panic or
 unexpected allocation.
+Derived point counts for resampling should be rejected before conversion or
+allocation when interval division is nonfinite or exceeds the platform integer
+range.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 Polygon distance indices should identify the matching immediate ring rather

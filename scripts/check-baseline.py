@@ -16,6 +16,7 @@ GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
 PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-make-gates.md"
 NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
+DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -47,6 +48,7 @@ REQUIRED = [
     PATCHED_MODERN_LANE_PLAN,
     LOCATION_INDEPENDENT_MAKE_PLAN,
     NONFINITE_INTERVAL_PLAN,
+    DERIVED_POINT_COUNT_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -172,6 +174,11 @@ def main():
     )
     interval_guard = resample.find("if len(ls) <= 1", interval_start)
     distance_setup = resample.find("total, dists := precomputeDistances(ls, df)", interval_start)
+    point_count_setup = resample.find("pointCount := total / dist", distance_setup)
+    point_count_guard = resample.find(
+        "math.IsNaN(pointCount) || math.IsInf(pointCount, 0)", point_count_setup
+    )
+    point_count_conversion = resample.find("totalPoints := int(pointCount) + 1", point_count_setup)
     if not (
         0 <= finite_interval_guard < interval_guard < distance_setup
     ):
@@ -181,6 +188,14 @@ def main():
         )
     if interval_guard == -1 or distance_setup == -1 or interval_guard > distance_setup:
         failures.append("ToInterval must guard empty line strings before distance precomputation")
+    if not (
+        distance_setup < point_count_setup < point_count_guard < point_count_conversion
+        and "pointCount >= float64(maxInt)" in resample
+        and "maxInt := int(^uint(0) >> 1)" in resample
+    ):
+        failures.append(
+            "ToInterval must reject non-finite and int-overflowing derived point counts before conversion"
+        )
     if "TestToIntervalEmptyLineString" not in resample_tests or "distance function should not be called" not in resample_tests:
         failures.append("resample tests must cover empty interval input before distance calls")
     for phrase in [
@@ -193,6 +208,15 @@ def main():
         if phrase not in resample_tests:
             failures.append(
                 f"resample tests must preserve non-finite interval coverage: {phrase}"
+            )
+    for phrase in [
+        "TestToIntervalRejectsUnrepresentablePointCount",
+        "math.SmallestNonzeroFloat64",
+        "unrepresentable point count should return nil",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve derived point-count coverage: {phrase}"
             )
     distance_from = read("planar/distance_from.go")
     distance_from_tests = read("planar/distance_from_test.go")
@@ -258,6 +282,7 @@ def main():
         "leading empty polygons",
         "empty interval resampling",
         "non-finite interval distances",
+        "derived point counts",
         "polygon ring index",
         "race detector",
         "hosted Linux",
@@ -271,6 +296,11 @@ def main():
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
+    interval_guidance = [
+        read(path).lower() for path in ["README.md", "SECURITY.md", "VISION.md"]
+    ]
+    if not all("derived point counts" in document for document in interval_guidance):
+        failures.append("all guidance must document the derived point-count boundary")
 
     for path in ["README.md", "SECURITY.md", "VISION.md"]:
         if "non-finite interval distances" not in read(path).lower():
@@ -392,6 +422,35 @@ def main():
             failures.append(
                 f"non-finite interval verification must record {evidence}"
             )
+    point_count_plan = read(DERIVED_POINT_COUNT_PLAN)
+    point_count_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", point_count_plan
+    )
+    point_count_work = markdown_section(point_count_plan, "Work Completed")
+    point_count_verification = markdown_section(
+        point_count_plan, "Verification Completed"
+    )
+    if (point_count_status != ["completed"] or not point_count_work or
+            not point_count_verification or re.search(
+                r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                point_count_verification,
+            )):
+        failures.append("derived point-count plan must record completed verification")
+    for evidence in [
+        "TestToIntervalRejectsUnrepresentablePointCount",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "make check",
+        "external working directory",
+        "go mod verify",
+        "go build ./...",
+        "govulncheck ./...",
+        "no vulnerabilities",
+        "Six isolated hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in point_count_verification:
+            failures.append(f"derived point-count verification must record {evidence}")
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
     ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
     ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")

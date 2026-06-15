@@ -172,6 +172,14 @@ func TestToIntervalRejectsNonFiniteDistance(t *testing.T) {
 	}
 }
 
+func TestToIntervalRejectsUnrepresentablePointCount(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 10}}
+	result := ToInterval(line, planar.Distance, math.SmallestNonzeroFloat64)
+	if result != nil {
+		t.Fatalf("unrepresentable point count should return nil: %v", result)
+	}
+}
+
 func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls := orb.LineString{{0, 0}}
 
