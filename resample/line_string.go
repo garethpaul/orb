@@ -147,7 +147,7 @@ func precomputeDistances(ls orb.LineString, df orb.DistanceFunc) (float64, []flo
 	dists := make([]float64, len(ls)-1)
 	for i := 0; i < len(ls)-1; i++ {
 		dists[i] = df(ls[i], ls[i+1])
-		if math.IsNaN(dists[i]) || math.IsInf(dists[i], 0) {
+		if dists[i] < 0 || math.IsNaN(dists[i]) || math.IsInf(dists[i], 0) {
 			return 0, nil, false
 		}
 		total += dists[i]

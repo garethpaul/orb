@@ -1,6 +1,6 @@
 # Negative Callback Segment Distance Guard
 
-Status: planned
+Status: completed
 
 ## Problem
 
@@ -39,8 +39,19 @@ cumulative geometry.
 
 ## Work Completed
 
-Pending implementation.
+- Rejected each negative finite callback segment before accumulation in the
+  shared distance precomputation helper.
+- Added mixed negative/positive callback regressions for both `Resample` and
+  `ToInterval`.
+- Added ordering-sensitive static contracts and synchronized project guidance.
 
 ## Verification Completed
 
-Pending implementation and verification.
+- Focused resample tests and full `make check` passed on Go 1.20.14 and
+  Go 1.25.11.
+- Module verification, builds, and the absolute-Makefile check from an external working directory
+  passed on both Go lanes.
+- Six isolated hostile mutations were rejected for missing segment validation,
+  either public regression, missing guidance, and stale plan status.
+- Gofmt, exact diff, artifact, dependency/generated-code, credential,
+  conflict-marker, binary, mode, whitespace, and intended-path audits passed.

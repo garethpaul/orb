@@ -92,6 +92,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   rejected before conversion or allocation.
 - Non-finite callback distances and callback-derived cumulative totals are
   rejected before either resampling path interpolates or allocates output points.
+- Negative callback segment distances are rejected before accumulation so a
+  later positive segment cannot mask invalid cumulative geometry.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 - `planar.DistanceFromWithIndex` returns the matching polygon ring index rather

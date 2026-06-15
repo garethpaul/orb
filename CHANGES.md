@@ -8,6 +8,8 @@
   conversion and allocation.
 - Rejected non-finite callback distances and callback-derived cumulative totals
   before either resampling entry point interpolates or allocates output points.
+- Rejected negative callback segment distances before accumulation in both
+  resampling entry points.
 
 ## 2026-06-14
 

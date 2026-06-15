@@ -76,6 +76,8 @@ Negative derived point counts from caller distance callbacks should fail closed
 before conversion or allocation.
 Non-finite callback distances and callback-derived cumulative totals should
 fail closed before either resampling path interpolates or allocates output points.
+Negative callback segment distances should fail closed before accumulation so
+later positive segments cannot mask invalid cumulative geometry.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 Polygon distance indices should identify the matching immediate ring rather

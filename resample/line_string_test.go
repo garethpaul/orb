@@ -218,6 +218,28 @@ func TestResampleRejectsNonFiniteCallbackDistance(t *testing.T) {
 	}
 }
 
+func TestResampleRejectsNegativeCallbackSegmentDistance(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 5}, {0, 10}}
+
+	negativeThenPositive := func() orb.DistanceFunc {
+		calls := 0
+		return func(orb.Point, orb.Point) float64 {
+			calls++
+			if calls == 1 {
+				return -1
+			}
+			return 11
+		}
+	}
+
+	if result := Resample(line.Clone(), negativeThenPositive(), 3); result != nil {
+		t.Fatalf("negative callback segment should return nil from Resample: %v", result)
+	}
+	if result := ToInterval(line.Clone(), negativeThenPositive(), 1); result != nil {
+		t.Fatalf("negative callback segment should return nil from ToInterval: %v", result)
+	}
+}
+
 func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls := orb.LineString{{0, 0}}
 

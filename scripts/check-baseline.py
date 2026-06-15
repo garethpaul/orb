@@ -19,6 +19,7 @@ NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
 DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
 NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.md"
 NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
+NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -53,6 +54,7 @@ REQUIRED = [
     DERIVED_POINT_COUNT_PLAN,
     NEGATIVE_POINT_COUNT_PLAN,
     NONFINITE_CALLBACK_PLAN,
+    NEGATIVE_CALLBACK_SEGMENT_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -200,15 +202,18 @@ def main():
     interval_callback_guard = resample.find("if !ok", distance_setup)
     precompute_start = resample.find("func precomputeDistances")
     callback_validation = resample.find(
-        "math.IsNaN(dists[i]) || math.IsInf(dists[i], 0)", precompute_start
+        "dists[i] < 0 || math.IsNaN(dists[i]) || math.IsInf(dists[i], 0)",
+        precompute_start,
     )
+    callback_accumulation = resample.find("total += dists[i]", callback_validation)
     callback_total_validation = resample.find(
         "math.IsNaN(total) || math.IsInf(total, 0)", callback_validation
     )
     if not (
         0 <= resample_distance_setup < callback_guard < interval_start
         and distance_setup < interval_callback_guard < point_count_setup
-        and precompute_start < callback_validation < callback_total_validation
+        and precompute_start < callback_validation < callback_accumulation
+        < callback_total_validation
     ):
         failures.append(
             "both resample entry points must reject non-finite callback distances"
@@ -244,6 +249,17 @@ def main():
         if phrase not in resample_tests:
             failures.append(
                 f"resample tests must preserve non-finite callback coverage: {phrase}"
+            )
+    for phrase in [
+        "TestResampleRejectsNegativeCallbackSegmentDistance",
+        "negative callback segment should return nil from Resample",
+        "negative callback segment should return nil from ToInterval",
+        "return -1",
+        "return 11",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve negative callback segment coverage: {phrase}"
             )
     for phrase in [
         "TestToIntervalRejectsNegativeDerivedPointCount",
@@ -556,6 +572,25 @@ def main():
     ]:
         if evidence not in nonfinite_callback_verification:
             failures.append(f"non-finite callback verification must record {evidence}")
+    negative_callback_segment_plan = read(NEGATIVE_CALLBACK_SEGMENT_PLAN)
+    negative_callback_segment_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", negative_callback_segment_plan
+    )
+    negative_callback_segment_verification = markdown_section(
+        negative_callback_segment_plan, "Verification Completed"
+    )
+    if (negative_callback_segment_status != ["completed"] or
+            "Go 1.20.14" not in negative_callback_segment_verification or
+            "Go 1.25.11" not in negative_callback_segment_verification or
+            "make check" not in negative_callback_segment_verification or
+            "external working directory" not in negative_callback_segment_verification or
+            "Six isolated hostile mutations were rejected" not in negative_callback_segment_verification or
+            re.search(r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                      negative_callback_segment_verification)):
+        failures.append("negative callback segment plan must record completed verification")
+    for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if "negative callback segment distances" not in read(path).lower():
+            failures.append(f"{path} must document negative callback segment distances")
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
     ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
     ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")
