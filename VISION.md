@@ -45,7 +45,7 @@ Priority:
 - Keep nonfinite and integer-overflowing derived point counts out of resampling
   allocation
 - Keep negative derived point counts out of resampling conversion and allocation
-- Keep non-finite callback distances out of both resampling entry points
+- Keep non-finite callback distances and cumulative totals out of both resampling entry points
 - Keep polygon distance indices aligned with the matching immediate ring
 - Keep the race detector in the canonical verification gate
 - Keep fixed Go 1.20.14 and patched Go 1.25.11 validation in pinned, read-only,

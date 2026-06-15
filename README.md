@@ -90,8 +90,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   integer conversion or output allocation.
 - Negative derived point counts from invalid caller distance callbacks are also
   rejected before conversion or allocation.
-- Non-finite callback distances are rejected before either resampling path
-  interpolates or allocates output points.
+- Non-finite callback distances and callback-derived cumulative totals are
+  rejected before either resampling path interpolates or allocates output points.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 - `planar.DistanceFromWithIndex` returns the matching polygon ring index rather

@@ -192,7 +192,7 @@ func TestToIntervalRejectsNegativeDerivedPointCount(t *testing.T) {
 }
 
 func TestResampleRejectsNonFiniteCallbackDistance(t *testing.T) {
-	line := orb.LineString{{0, 0}, {0, 10}}
+	line := orb.LineString{{0, 0}, {0, 5}, {0, 10}}
 
 	for _, tc := range []struct {
 		name     string
@@ -201,6 +201,7 @@ func TestResampleRejectsNonFiniteCallbackDistance(t *testing.T) {
 		{name: "NaN", distance: math.NaN()},
 		{name: "positive infinity", distance: math.Inf(1)},
 		{name: "negative infinity", distance: math.Inf(-1)},
+		{name: "finite cumulative overflow", distance: math.MaxFloat64},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			distance := func(orb.Point, orb.Point) float64 {

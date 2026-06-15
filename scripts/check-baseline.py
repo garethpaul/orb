@@ -202,10 +202,13 @@ def main():
     callback_validation = resample.find(
         "math.IsNaN(dists[i]) || math.IsInf(dists[i], 0)", precompute_start
     )
+    callback_total_validation = resample.find(
+        "math.IsNaN(total) || math.IsInf(total, 0)", callback_validation
+    )
     if not (
         0 <= resample_distance_setup < callback_guard < interval_start
         and distance_setup < interval_callback_guard < point_count_setup
-        and precompute_start < callback_validation
+        and precompute_start < callback_validation < callback_total_validation
     ):
         failures.append(
             "both resample entry points must reject non-finite callback distances"
@@ -236,6 +239,7 @@ def main():
         "TestResampleRejectsNonFiniteCallbackDistance",
         "non-finite callback distance should return nil from Resample",
         "non-finite callback distance should return nil from ToInterval",
+        "finite cumulative overflow",
     ]:
         if phrase not in resample_tests:
             failures.append(

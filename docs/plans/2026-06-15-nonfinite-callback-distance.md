@@ -17,8 +17,8 @@ distance before either resampling path allocates or interpolates output points.
 
 ## Scope
 
-- Detect `NaN` and positive or negative infinity while precomputing segment
-  distances.
+- Detect `NaN` and positive or negative infinity in segment distances and their
+  callback-derived cumulative total.
 - Return `nil` from `Resample` and `ToInterval` when callback distances are
   non-finite.
 - Preserve valid callback behavior, short-line handling, negative-derived-count
@@ -61,8 +61,8 @@ and completed verification without changing module or generated-code paths.
 
 ## Work Completed
 
-- Validated every precomputed segment distance and returned an explicit
-  validity result to both public resampling entry points.
+- Validated every precomputed segment distance and its cumulative total, then
+  returned an explicit validity result to both public resampling entry points.
 - Returned `nil` before interpolation or output allocation when a callback
   produced `NaN` or either infinity.
 - Added shared no-panic regression coverage, static contracts, and synchronized
@@ -75,7 +75,7 @@ and completed verification without changing module or generated-code paths.
 - Both Go lanes passed `make check`, including tests, race tests, vet, and the
   static baseline; the absolute Makefile gate passed from an external working directory.
 - `go mod verify` and `go build ./...` passed on both supported Go lanes.
-- Six isolated hostile mutations covering callback validation, both public
+- Seven isolated hostile mutations covering callback and cumulative validation, both public
   guards, focused tests, guidance, and completed plan evidence were rejected.
 - `git diff --check` plus gofmt, generated-artifact, dependency, credential,
   binary, mode, and intended-path audits passed.
