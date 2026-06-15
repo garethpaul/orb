@@ -41,7 +41,7 @@ func ToInterval(ls orb.LineString, df orb.DistanceFunc, dist float64) orb.LineSt
 
 	pointCount := total / dist
 	maxInt := int(^uint(0) >> 1)
-	if math.IsNaN(pointCount) || math.IsInf(pointCount, 0) || pointCount >= float64(maxInt) {
+	if pointCount < 0 || math.IsNaN(pointCount) || math.IsInf(pointCount, 0) || pointCount >= float64(maxInt) {
 		return nil
 	}
 	totalPoints := int(pointCount) + 1

@@ -88,6 +88,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   point-count conversion, preventing malformed numeric input from panicking.
 - Nonfinite or integer-overflowing derived point counts are rejected before
   integer conversion or output allocation.
+- Negative derived point counts from invalid caller distance callbacks are also
+  rejected before conversion or allocation.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 - `planar.DistanceFromWithIndex` returns the matching polygon ring index rather

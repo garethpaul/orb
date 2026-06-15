@@ -180,6 +180,17 @@ func TestToIntervalRejectsUnrepresentablePointCount(t *testing.T) {
 	}
 }
 
+func TestToIntervalRejectsNegativeDerivedPointCount(t *testing.T) {
+	line := orb.LineString{{0, 0}, {0, 10}}
+	negativeDistance := func(a, b orb.Point) float64 {
+		return -planar.Distance(a, b)
+	}
+
+	if result := ToInterval(line, negativeDistance, 1); result != nil {
+		t.Fatalf("negative derived point count should return nil: %v", result)
+	}
+}
+
 func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls := orb.LineString{{0, 0}}
 

@@ -17,6 +17,7 @@ PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-make-gates.md"
 NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
 DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
+NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -49,6 +50,7 @@ REQUIRED = [
     LOCATION_INDEPENDENT_MAKE_PLAN,
     NONFINITE_INTERVAL_PLAN,
     DERIVED_POINT_COUNT_PLAN,
+    NEGATIVE_POINT_COUNT_PLAN,
     "scripts/check-baseline.py",
 ]
 
@@ -190,11 +192,12 @@ def main():
         failures.append("ToInterval must guard empty line strings before distance precomputation")
     if not (
         distance_setup < point_count_setup < point_count_guard < point_count_conversion
+        and "pointCount < 0" in resample
         and "pointCount >= float64(maxInt)" in resample
         and "maxInt := int(^uint(0) >> 1)" in resample
     ):
         failures.append(
-            "ToInterval must reject non-finite and int-overflowing derived point counts before conversion"
+            "ToInterval must reject negative, non-finite, and int-overflowing derived point counts before conversion"
         )
     if "TestToIntervalEmptyLineString" not in resample_tests or "distance function should not be called" not in resample_tests:
         failures.append("resample tests must cover empty interval input before distance calls")
@@ -208,6 +211,15 @@ def main():
         if phrase not in resample_tests:
             failures.append(
                 f"resample tests must preserve non-finite interval coverage: {phrase}"
+            )
+    for phrase in [
+        "TestToIntervalRejectsNegativeDerivedPointCount",
+        "return -planar.Distance(a, b)",
+        "negative derived point count should return nil",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve negative derived point-count coverage: {phrase}"
             )
     for phrase in [
         "TestToIntervalRejectsUnrepresentablePointCount",
@@ -283,6 +295,7 @@ def main():
         "empty interval resampling",
         "non-finite interval distances",
         "derived point counts",
+        "negative derived point counts",
         "polygon ring index",
         "race detector",
         "hosted Linux",
@@ -301,6 +314,8 @@ def main():
     ]
     if not all("derived point counts" in document for document in interval_guidance):
         failures.append("all guidance must document the derived point-count boundary")
+    if not all("negative derived point counts" in document for document in interval_guidance):
+        failures.append("all guidance must document the negative point-count boundary")
 
     for path in ["README.md", "SECURITY.md", "VISION.md"]:
         if "non-finite interval distances" not in read(path).lower():
@@ -451,6 +466,31 @@ def main():
     ]:
         if evidence not in point_count_verification:
             failures.append(f"derived point-count verification must record {evidence}")
+    negative_point_plan = read(NEGATIVE_POINT_COUNT_PLAN)
+    negative_point_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", negative_point_plan)
+    negative_point_work = markdown_section(negative_point_plan, "Work Completed")
+    negative_point_verification = markdown_section(negative_point_plan, "Verification Completed")
+    if (negative_point_status != ["completed"] or not negative_point_work or
+            not negative_point_verification or re.search(
+                r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                negative_point_verification,
+            )):
+        failures.append("negative derived point-count plan must record completed verification")
+    for evidence in [
+        "TestToIntervalRejectsNegativeDerivedPointCount",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "make check",
+        "external working directory",
+        "go mod verify",
+        "go build ./...",
+        "govulncheck ./...",
+        "no vulnerabilities",
+        "Five isolated hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in negative_point_verification:
+            failures.append(f"negative point-count verification must record {evidence}")
     polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
     ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
     ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")

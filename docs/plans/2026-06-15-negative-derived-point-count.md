@@ -1,6 +1,6 @@
 # Negative Derived Point Count Guard
 
-status: in_progress
+status: completed
 
 ## Context
 
@@ -34,8 +34,21 @@ handling, or output allocation while preserving valid finite-positive behavior.
 
 ## Work Completed
 
-Pending implementation.
+- Rejected negative derived point counts beside the existing nonfinite and
+  integer-overflow checks, before conversion or allocation.
+- Added a regression using a negative caller distance callback.
+- Added mutation-sensitive static contracts and synchronized guidance.
 
 ## Verification Completed
 
-Pending implementation and validation.
+- `TestToIntervalRejectsNegativeDerivedPointCount` passed under Go 1.20.14 and
+  Go 1.25.11.
+- `make check` passed under both maintained lanes, including tests, race tests,
+  vet, and the static baseline; the external working directory gate passed.
+- `go mod verify` and `go build ./...` passed under both toolchains.
+- `GOTOOLCHAIN=go1.25.11 go run golang.org/x/vuln/cmd/govulncheck@latest ./...`
+  (`govulncheck ./...`) reported no vulnerabilities.
+- Five isolated hostile mutations covering the source guard, test name,
+  callback sign, guidance, and plan evidence were rejected.
+- `git diff --check` plus generated-artifact, dependency-file, binary, mode,
+  credential-shaped addition, and intended-path audits passed.

@@ -4,6 +4,8 @@
 
 - Rejected nonfinite or integer-overflowing derived `ToInterval` point counts
   before integer conversion and output allocation.
+- Rejected negative derived point counts from invalid distance callbacks before
+  conversion and allocation.
 
 ## 2026-06-14
 
