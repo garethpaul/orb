@@ -1,6 +1,6 @@
 # Resample Safety Review
 
-Status: in progress
+Status: completed
 
 ## Scope
 
@@ -44,7 +44,13 @@ correcting ordinary outer-ring and hole-ring results.
 - `go vet` for both supported toolchains on `./resample ./planar`
 - `python3 scripts/check-baseline.py`
 - Six isolated hostile mutations rejected.
-- Hosted Linux `make check` and CodeQL: pending.
+- Hosted Linux `make check` passed twice for both Go 1.20.14 and Go 1.25.11 on
+  aggregate head `76f86b87f5c3bf02589ac49eb5d9edc8b268ffd9` in runs
+  `27845256306` and `27845258511`.
+- CodeQL Actions, Go, and Python analysis passed in run `27845257744`.
+- Branch protection was updated from the obsolete `test (1.25.3)` context to
+  the successful documented `test (1.25.11)` context while retaining strict
+  required checks for both supported lanes.
 
 ## Residual Risk
 
