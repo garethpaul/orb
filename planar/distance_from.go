@@ -45,8 +45,8 @@ func DistanceFrom(g orb.Geometry, p orb.Point) float64 {
 }
 
 // DistanceFromWithIndex returns the minimum euclidean distance
-// from the boundary of the geometry plus the index of the sub-geometry
-// that was the match.
+// from the boundary of the geometry plus the index of the immediate child
+// geometry that was the match.
 func DistanceFromWithIndex(g orb.Geometry, p orb.Point) (float64, int) {
 	if g == nil {
 		return math.Inf(1), -1
@@ -136,9 +136,10 @@ func polygonDistanceFrom(p orb.Polygon, point orb.Point) (float64, int) {
 		return math.Inf(1), -1
 	}
 
-	dist, index := lineStringDistanceFrom(orb.LineString(p[0]), point)
-	for i := 1; i < len(p); i++ {
-		d, i := lineStringDistanceFrom(orb.LineString(p[i]), point)
+	dist := math.Inf(1)
+	index := -1
+	for i := 0; i < len(p); i++ {
+		d, _ := lineStringDistanceFrom(orb.LineString(p[i]), point)
 		if d < dist {
 			dist = d
 			index = i

@@ -3,13 +3,21 @@
 package resample
 
 import (
+	"math"
+
 	"github.com/paulmach/orb"
+)
+
+const (
+	maxResampleAllocationBytes = 64 << 20
+	bytesPerPoint              = 2 * 8
+	maxResamplePoints          = maxResampleAllocationBytes / bytesPerPoint
 )
 
 // Resample converts the line string into totalPoints-1 evenly spaced segments.
 // This function will modify the linestring input.
 func Resample(ls orb.LineString, df orb.DistanceFunc, totalPoints int) orb.LineString {
-	if totalPoints <= 0 {
+	if totalPoints <= 0 || totalPoints > maxResamplePoints || !finiteLineString(ls) {
 		return nil
 	}
 
@@ -17,9 +25,11 @@ func Resample(ls orb.LineString, df orb.DistanceFunc, totalPoints int) orb.LineS
 	if ret {
 		return ls
 	}
-
 	// precomputes the total distance and intermediate distances
-	total, dists := precomputeDistances(ls, df)
+	total, dists, ok := precomputeDistances(ls, df)
+	if !ok {
+		return nil
+	}
 	return resample(ls, dists, total, totalPoints)
 }
 
@@ -27,17 +37,29 @@ func Resample(ls orb.LineString, df orb.DistanceFunc, totalPoints int) orb.LineS
 // about the given distance.
 // This function will modify the linestring input.
 func ToInterval(ls orb.LineString, df orb.DistanceFunc, dist float64) orb.LineString {
-	if dist <= 0 {
+	if !validSpacing(dist) || !finiteLineString(ls) {
 		return nil
 	}
 	if len(ls) <= 1 {
 		return ls
 	}
-
 	// precomputes the total distance and intermediate distances
-	total, dists := precomputeDistances(ls, df)
+	total, dists, ok := precomputeDistances(ls, df)
+	if !ok {
+		return nil
+	}
+	if total == 0 {
+		if allPointsEqual(ls) {
+			return ls[:1]
+		}
+		return nil
+	}
 
-	totalPoints := int(total/dist) + 1
+	pointCount := total / dist
+	if pointCount < 0 || math.IsNaN(pointCount) || math.IsInf(pointCount, 0) || pointCount >= float64(maxResamplePoints) {
+		return nil
+	}
+	totalPoints := int(pointCount) + 1
 	ls, ret := resampleEdgeCases(ls, totalPoints)
 	if ret {
 		return ls
@@ -47,13 +69,22 @@ func ToInterval(ls orb.LineString, df orb.DistanceFunc, dist float64) orb.LineSt
 }
 
 func resample(ls orb.LineString, dists []float64, totalDistance float64, totalPoints int) orb.LineString {
+	if totalPoints == 1 {
+		return ls[:1]
+	}
+
+	spacing := totalDistance / float64(totalPoints-1)
+	if !validSpacing(spacing) {
+		return nil
+	}
+
 	points := make([]orb.Point, 1, totalPoints)
 	points[0] = ls[0] // start stays the same
 
 	step := 1
 	dist := 0.0
 
-	currentDistance := totalDistance / float64(totalPoints-1)
+	currentDistance := spacing
 	// declare here and update had nice performance benefits need to retest
 	currentSeg := [2]orb.Point{}
 	for i := 0; i < len(ls)-1; i++ {
@@ -62,14 +93,25 @@ func resample(ls orb.LineString, dists []float64, totalDistance float64, totalPo
 
 		currentSegDistance := dists[i]
 		nextDistance := dist + currentSegDistance
+		if currentSegDistance == 0 {
+			dist = nextDistance
+			continue
+		}
 
-		for currentDistance <= nextDistance {
+		for step < totalPoints && currentDistance <= nextDistance {
 			// need to add a point
 			percent := (currentDistance - dist) / currentSegDistance
-			points = append(points, orb.Point{
-				currentSeg[0][0] + percent*(currentSeg[1][0]-currentSeg[0][0]),
-				currentSeg[0][1] + percent*(currentSeg[1][1]-currentSeg[0][1]),
-			})
+			if math.IsNaN(percent) || math.IsInf(percent, 0) || percent < 0 || percent > 1 {
+				return nil
+			}
+			point := orb.Point{
+				interpolate(currentSeg[0][0], currentSeg[1][0], percent),
+				interpolate(currentSeg[0][1], currentSeg[1][1], percent),
+			}
+			if !finitePoint(point) {
+				return nil
+			}
+			points = append(points, point)
 
 			// move to the next distance we want
 			step++
@@ -82,11 +124,12 @@ func resample(ls orb.LineString, dists []float64, totalDistance float64, totalPo
 		// past the current point in the original segment, so move to the next one
 		dist = nextDistance
 	}
+	if len(points) != totalPoints {
+		return nil
+	}
 
 	// end stays the same, to handle round off errors
-	if totalPoints != 1 { // for 1, we want the first point
-		points[totalPoints-1] = ls[len(ls)-1]
-	}
+	points[totalPoints-1] = ls[len(ls)-1]
 
 	return orb.LineString(points)
 }
@@ -100,17 +143,12 @@ func resampleEdgeCases(ls orb.LineString, totalPoints int) (orb.LineString, bool
 	if len(ls) <= 1 {
 		return ls, true
 	}
-
-	// if all the points are the same, treat as special case.
-	equal := true
-	for _, point := range ls {
-		if !ls[0].Equal(point) {
-			equal = false
-			break
-		}
+	if totalPoints == 1 {
+		return ls[:1], true
 	}
 
-	if equal {
+	// if all the points are the same, treat as special case.
+	if allPointsEqual(ls) {
 		if totalPoints > len(ls) {
 			// extend to be requested length
 			for len(ls) != totalPoints {
@@ -128,14 +166,55 @@ func resampleEdgeCases(ls orb.LineString, totalPoints int) (orb.LineString, bool
 	return ls, false
 }
 
+func allPointsEqual(ls orb.LineString) bool {
+	for _, point := range ls[1:] {
+		if !ls[0].Equal(point) {
+			return false
+		}
+	}
+	return true
+}
+
 // precomputeDistances precomputes the total distance and intermediate distances.
-func precomputeDistances(ls orb.LineString, df orb.DistanceFunc) (float64, []float64) {
+func precomputeDistances(ls orb.LineString, df orb.DistanceFunc) (float64, []float64, bool) {
+	if df == nil {
+		return 0, nil, false
+	}
+
 	total := 0.0
 	dists := make([]float64, len(ls)-1)
 	for i := 0; i < len(ls)-1; i++ {
 		dists[i] = df(ls[i], ls[i+1])
+		if dists[i] < 0 || math.IsNaN(dists[i]) || math.IsInf(dists[i], 0) {
+			return 0, nil, false
+		}
 		total += dists[i]
+		if math.IsNaN(total) || math.IsInf(total, 0) {
+			return 0, nil, false
+		}
 	}
 
-	return total, dists
+	return total, dists, true
+}
+
+func validSpacing(value float64) bool {
+	return value > 0 && !math.IsNaN(value) && !math.IsInf(value, 0)
+}
+
+func finiteLineString(ls orb.LineString) bool {
+	for _, point := range ls {
+		if !finitePoint(point) {
+			return false
+		}
+	}
+	return true
+}
+
+func finitePoint(point orb.Point) bool {
+	return !math.IsNaN(point[0]) && !math.IsInf(point[0], 0) &&
+		!math.IsNaN(point[1]) && !math.IsInf(point[1], 0)
+}
+
+func interpolate(a, b, percent float64) float64 {
+	return (1-percent)*a + percent*b
 }

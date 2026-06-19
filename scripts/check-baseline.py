@@ -2,6 +2,7 @@
 """Static baseline checks for the orb Go geometry library."""
 
 from pathlib import Path
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -9,6 +10,17 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = "docs/plans/2026-06-08-orb-go-module-baseline.md"
 HOSTED_VALIDATION_PLAN = "docs/plans/2026-06-10-hosted-go-validation.md"
+POLYGON_DISTANCE_INDEX_PLAN = "docs/plans/2026-06-12-polygon-distance-ring-index.md"
+CHECKOUT_CREDENTIAL_PLAN = "docs/plans/2026-06-12-checkout-credential-boundary.md"
+GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
+PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
+LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-make-gates.md"
+NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
+DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
+NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.md"
+NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
+NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
+ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -18,6 +30,7 @@ REQUIRED = [
     "SECURITY.md",
     "VISION.md",
     "docs/readme-overview.svg",
+    "docs/go-support.md",
     "go.mod",
     "go.sum",
     PLAN,
@@ -33,12 +46,31 @@ REQUIRED = [
     "docs/plans/2026-06-10-multipolygon-empty-bound.md",
     "docs/plans/2026-06-10-resample-empty-interval.md",
     HOSTED_VALIDATION_PLAN,
+    POLYGON_DISTANCE_INDEX_PLAN,
+    CHECKOUT_CREDENTIAL_PLAN,
+    GO_SUPPORT_PLAN,
+    PATCHED_MODERN_LANE_PLAN,
+    LOCATION_INDEPENDENT_MAKE_PLAN,
+    NONFINITE_INTERVAL_PLAN,
+    DERIVED_POINT_COUNT_PLAN,
+    NEGATIVE_POINT_COUNT_PLAN,
+    NONFINITE_CALLBACK_PLAN,
+    NEGATIVE_CALLBACK_SEGMENT_PLAN,
+    ZERO_CALLBACK_TOTAL_PLAN,
     "scripts/check-baseline.py",
 ]
 
 
 def read(path):
     return (ROOT / path).read_text(encoding="utf-8", errors="replace")
+
+
+def markdown_section(text, heading):
+    match = re.search(
+        rf"(?ms)^## {re.escape(heading)}\s*$\n(.*?)(?=^## |\Z)",
+        text,
+    )
+    return match.group(1).strip() if match else ""
 
 
 def main():
@@ -56,6 +88,8 @@ def main():
     ]:
         if phrase not in go_mod:
             failures.append(f"go.mod must include {phrase}")
+    if re.search(r"(?m)^toolchain\s+", go_mod):
+        failures.append("go.mod must not force an automatic toolchain switch")
 
     go_sum = read("go.sum")
     for phrase in ["github.com/gogo/protobuf v1.3.2", "github.com/pkg/errors v0.9.1"]:
@@ -64,10 +98,11 @@ def main():
 
     makefile = read("Makefile")
     for phrase in [
-        "go test ./...",
-        "go test -race ./...",
-        "go vet ./...",
-        "python3 scripts/check-baseline.py",
+        "override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        'cd "$(REPO_ROOT)" && go test ./...',
+        'cd "$(REPO_ROOT)" && go test -race ./...',
+        'cd "$(REPO_ROOT)" && go vet ./...',
+        'python3 "$(REPO_ROOT)/scripts/check-baseline.py"',
         "check: test race lint static-check",
         "lint: vet",
         "build: test",
@@ -141,12 +176,137 @@ def main():
     resample = read("resample/line_string.go")
     resample_tests = read("resample/line_string_test.go")
     interval_start = resample.find("func ToInterval")
+    finite_interval_guard = resample.find("if !validSpacing(dist)", interval_start)
     interval_guard = resample.find("if len(ls) <= 1", interval_start)
-    distance_setup = resample.find("total, dists := precomputeDistances(ls, df)", interval_start)
+    distance_setup = resample.find("total, dists, ok := precomputeDistances(ls, df)", interval_start)
+    point_count_setup = resample.find("pointCount := total / dist", distance_setup)
+    point_count_guard = resample.find(
+        "math.IsNaN(pointCount) || math.IsInf(pointCount, 0)", point_count_setup
+    )
+    point_count_conversion = resample.find("totalPoints := int(pointCount) + 1", point_count_setup)
+    if not (
+        0 <= finite_interval_guard < interval_guard < distance_setup
+    ):
+        failures.append(
+            "ToInterval must reject non-finite distances before line handling "
+            "and distance precomputation"
+        )
     if interval_guard == -1 or distance_setup == -1 or interval_guard > distance_setup:
         failures.append("ToInterval must guard empty line strings before distance precomputation")
+    resample_start = resample.find("func Resample")
+    resample_distance_setup = resample.find(
+        "total, dists, ok := precomputeDistances(ls, df)", resample_start
+    )
+    callback_guard = resample.find("if !ok", resample_distance_setup)
+    interval_callback_guard = resample.find("if !ok", distance_setup)
+    precompute_start = resample.find("func precomputeDistances")
+    callback_validation = resample.find(
+        "dists[i] < 0 || math.IsNaN(dists[i]) || math.IsInf(dists[i], 0)",
+        precompute_start,
+    )
+    callback_accumulation = resample.find("total += dists[i]", callback_validation)
+    callback_total_validation = resample.find(
+        "math.IsNaN(total) || math.IsInf(total, 0)", callback_validation
+    )
+    if not (
+        0 <= resample_distance_setup < callback_guard < interval_start
+        and distance_setup < interval_callback_guard < point_count_setup
+        and precompute_start < callback_validation < callback_accumulation
+        < callback_total_validation
+    ):
+        failures.append(
+            "both resample entry points must reject non-finite callback distances"
+        )
+    if not (
+        distance_setup < point_count_setup < point_count_guard < point_count_conversion
+        and "pointCount < 0" in resample
+        and "pointCount >= float64(maxResamplePoints)" in resample
+        and "maxResampleAllocationBytes = 64 << 20" in resample
+    ):
+        failures.append(
+            "ToInterval must reject negative, non-finite, and int-overflowing derived point counts before conversion"
+        )
     if "TestToIntervalEmptyLineString" not in resample_tests or "distance function should not be called" not in resample_tests:
         failures.append("resample tests must cover empty interval input before distance calls")
+    for phrase in [
+        "TestToIntervalRejectsNonFiniteDistance",
+        "math.NaN()",
+        "math.Inf(1)",
+        "math.Inf(-1)",
+        "distance function should not be called for non-finite intervals",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve non-finite interval coverage: {phrase}"
+            )
+    for phrase in [
+        "TestResampleRejectsNonFiniteCallbackDistance",
+        "non-finite callback distance should return nil from Resample",
+        "non-finite callback distance should return nil from ToInterval",
+        "finite cumulative overflow",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve non-finite callback coverage: {phrase}"
+            )
+    for phrase in [
+        "TestResampleRejectsNegativeCallbackSegmentDistance",
+        "negative callback segment should return nil from Resample",
+        "negative callback segment should return nil from ToInterval",
+        "return -1",
+        "return 11",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve negative callback segment coverage: {phrase}"
+            )
+    for phrase in [
+        "TestToIntervalRejectsNegativeDerivedPointCount",
+        "return -planar.Distance(a, b)",
+        "negative derived point count should return nil",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve negative derived point-count coverage: {phrase}"
+            )
+    for phrase in [
+        "TestToIntervalRejectsUnrepresentablePointCount",
+        "math.SmallestNonzeroFloat64",
+        "unrepresentable point count should return nil",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(
+                f"resample tests must preserve derived point-count coverage: {phrase}"
+            )
+    for phrase in [
+        "TestResampleRejectsNilDistanceFunction",
+        "TestResampleRejectsUnboundedPointCount",
+        "TestResampleRejectsUnderflowedSpacing",
+        "TestResampleKeepsFiniteCoordinatesFinite",
+        "TestResampleStraightLineProperties",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(f"resample safety regression missing: {phrase}")
+    distance_from = read("planar/distance_from.go")
+    distance_from_tests = read("planar/distance_from_test.go")
+    for phrase in [
+        "index of the immediate child",
+        "dist := math.Inf(1)",
+        "index := -1",
+        "d, _ := lineStringDistanceFrom(orb.LineString(p[i]), point)",
+        "index = i",
+    ]:
+        if phrase not in distance_from:
+            failures.append(f"polygon distance ring index must include {phrase}")
+    for phrase in [
+        "TestDistanceFromWithIndex_PolygonReturnsRingIndex",
+        "outer ring nearest on nonzero segment",
+        "hole ring nearest on different segment",
+        "TestDistanceFromWithIndex_EmptyPolygon",
+        "TestDistanceFromWithIndex_PolygonWithoutSegments",
+    ]:
+        if phrase not in distance_from_tests:
+            failures.append(f"polygon distance tests must include {phrase}")
     simplify_helpers = read("simplify/helpers.go")
     simplify_tests = read("simplify/helpers_test.go")
     if "len(p) == 0" not in simplify_helpers or "len(p[0]) <= 2" not in simplify_helpers:
@@ -165,7 +325,12 @@ def main():
         if phrase not in planar_contains_tests:
             failures.append(f"planar containment tests must include {phrase}")
 
-    docs = "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md"])
+    docs = " ".join(
+        "\n".join(
+            read(path)
+            for path in ["README.md", "SECURITY.md", "VISION.md", "docs/go-support.md"]
+        ).split()
+    )
     for phrase in [
         "make check",
         "make lint",
@@ -186,11 +351,77 @@ def main():
         "zero-area bounds",
         "leading empty polygons",
         "empty interval resampling",
+        "non-finite interval distances",
+        "derived point counts",
+        "negative derived point counts",
+        "non-finite callback distances",
+        "polygon ring index",
         "race detector",
         "hosted Linux",
+        "Go compatibility minimum",
+        "modern-toolchain validation",
+        "GOTOOLCHAIN=local",
+        "go mod verify",
+        "breaking import migration",
+        "generated Go source",
+        "absolute Makefile path works from another directory",
     ]:
         if phrase.lower() not in docs.lower():
             failures.append(f"docs must mention {phrase}")
+    interval_guidance = [
+        read(path).lower() for path in ["README.md", "SECURITY.md", "VISION.md"]
+    ]
+    if not all("derived point counts" in document for document in interval_guidance):
+        failures.append("all guidance must document the derived point-count boundary")
+    if not all("negative derived point counts" in document for document in interval_guidance):
+        failures.append("all guidance must document the negative point-count boundary")
+    if not all("non-finite callback distances" in document for document in interval_guidance):
+        failures.append("all guidance must document the non-finite callback boundary")
+
+    for path in ["README.md", "SECURITY.md", "VISION.md"]:
+        if "non-finite interval distances" not in read(path).lower():
+            failures.append(
+                f"{path} must document the non-finite interval distance boundary"
+            )
+
+    go_support = " ".join(read("docs/go-support.md").split())
+    for phrase in [
+        "Review date: 2026-06-13",
+        "Go 1.20 is therefore the language and module compatibility minimum",
+        "fixed Go 1.20.14 lane",
+        "fixed Go 1.25.11 lane is patched modern-toolchain validation",
+        "does not raise the declared minimum",
+        "GOTOOLCHAIN=local",
+        "intentionally has no `toolchain` directive",
+        "github.com/paulmach/orb",
+        "breaking import migration",
+        "go.mod` and `go.sum` synchronized",
+        "go mod verify",
+        "direct and transitive graph changes",
+        "generated Go source",
+        "rather than hand-editing generated output",
+        "both fixed Go 1.20.14 and Go 1.25.11 toolchains",
+    ]:
+        if phrase not in go_support:
+            failures.append(f"Go support contract must include {phrase}")
+
+    current_support_claims = {
+        "README.md": [
+            "Go 1.20.14 and Go 1.25.11",
+            "Go 1.25.11 is patched modern-toolchain validation",
+        ],
+        "SECURITY.md": ["patched Go 1.25.11 toolchain"],
+        "VISION.md": ["Go 1.20.14 and patched Go 1.25.11 validation"],
+        "CHANGES.md": [
+            "fixed 1.20.14 and patched 1.25.11 validation roles",
+            "absolute-Makefile calls from external directories",
+        ],
+    }
+    for path, phrases in current_support_claims.items():
+        content = " ".join(read(path).split())
+        for phrase in phrases:
+            if phrase not in content:
+                failures.append(f"{path} must include {phrase}")
 
     plan = read(PLAN)
     if "status: completed" not in plan or "go test ./..." not in plan or "go vet ./..." not in plan:
@@ -237,8 +468,203 @@ def main():
     resample_empty_plan = read("docs/plans/2026-06-10-resample-empty-interval.md")
     if "status: completed" not in resample_empty_plan or "ToInterval" not in resample_empty_plan:
         failures.append("empty interval resampling plan must record completed status and verification")
+    nonfinite_interval_plan = read(NONFINITE_INTERVAL_PLAN)
+    nonfinite_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", nonfinite_interval_plan
+    )
+    nonfinite_work = markdown_section(nonfinite_interval_plan, "Work Completed")
+    nonfinite_verification = markdown_section(
+        nonfinite_interval_plan, "Verification Completed"
+    )
+    if nonfinite_status != ["completed"] or not nonfinite_work:
+        failures.append(
+            "non-finite interval plan must record one completed status and completed work"
+        )
+    if not nonfinite_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", nonfinite_verification
+    ):
+        failures.append(
+            "non-finite interval plan must record completed verification"
+        )
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 go test ./resample",
+        "GOTOOLCHAIN=go1.25.11 go test ./resample",
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.11 make check",
+        "from `/tmp`",
+        "TestToIntervalRejectsNonFiniteDistance",
+    ]:
+        if evidence not in nonfinite_verification:
+            failures.append(
+                f"non-finite interval verification must record {evidence}"
+            )
+    point_count_plan = read(DERIVED_POINT_COUNT_PLAN)
+    point_count_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", point_count_plan
+    )
+    point_count_work = markdown_section(point_count_plan, "Work Completed")
+    point_count_verification = markdown_section(
+        point_count_plan, "Verification Completed"
+    )
+    if (point_count_status != ["completed"] or not point_count_work or
+            not point_count_verification or re.search(
+                r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                point_count_verification,
+            )):
+        failures.append("derived point-count plan must record completed verification")
+    for evidence in [
+        "TestToIntervalRejectsUnrepresentablePointCount",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "make check",
+        "external working directory",
+        "go mod verify",
+        "go build ./...",
+        "govulncheck ./...",
+        "no vulnerabilities",
+        "Six isolated hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in point_count_verification:
+            failures.append(f"derived point-count verification must record {evidence}")
+    negative_point_plan = read(NEGATIVE_POINT_COUNT_PLAN)
+    negative_point_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", negative_point_plan)
+    negative_point_work = markdown_section(negative_point_plan, "Work Completed")
+    negative_point_verification = markdown_section(negative_point_plan, "Verification Completed")
+    if (negative_point_status != ["completed"] or not negative_point_work or
+            not negative_point_verification or re.search(
+                r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                negative_point_verification,
+            )):
+        failures.append("negative derived point-count plan must record completed verification")
+    for evidence in [
+        "TestToIntervalRejectsNegativeDerivedPointCount",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "make check",
+        "external working directory",
+        "go mod verify",
+        "go build ./...",
+        "govulncheck ./...",
+        "no vulnerabilities",
+        "Five isolated hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in negative_point_verification:
+            failures.append(f"negative point-count verification must record {evidence}")
+    nonfinite_callback_plan = read(NONFINITE_CALLBACK_PLAN)
+    nonfinite_callback_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", nonfinite_callback_plan
+    )
+    nonfinite_callback_work = markdown_section(
+        nonfinite_callback_plan, "Work Completed"
+    )
+    nonfinite_callback_verification = markdown_section(
+        nonfinite_callback_plan, "Verification Completed"
+    )
+    if (nonfinite_callback_status != ["completed"] or not nonfinite_callback_work or
+            not nonfinite_callback_verification or re.search(
+                r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                nonfinite_callback_verification,
+            )):
+        failures.append("non-finite callback plan must record completed verification")
+    for evidence in [
+        "TestResampleRejectsNonFiniteCallbackDistance",
+        "Go 1.20.14",
+        "Go 1.25.11",
+        "make check",
+        "external working directory",
+        "go mod verify",
+        "go build ./...",
+        "isolated hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in nonfinite_callback_verification:
+            failures.append(f"non-finite callback verification must record {evidence}")
+    negative_callback_segment_plan = read(NEGATIVE_CALLBACK_SEGMENT_PLAN)
+    negative_callback_segment_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", negative_callback_segment_plan
+    )
+    negative_callback_segment_verification = markdown_section(
+        negative_callback_segment_plan, "Verification Completed"
+    )
+    if (negative_callback_segment_status != ["completed"] or
+            "Go 1.20.14" not in negative_callback_segment_verification or
+            "Go 1.25.11" not in negative_callback_segment_verification or
+            "make check" not in negative_callback_segment_verification or
+            "external working directory" not in negative_callback_segment_verification or
+            "Six isolated hostile mutations were rejected" not in negative_callback_segment_verification or
+            re.search(r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                      negative_callback_segment_verification)):
+        failures.append("negative callback segment plan must record completed verification")
+    for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if "negative callback segment distances" not in read(path).lower():
+            failures.append(f"{path} must document negative callback segment distances")
+    line_string = read("resample/line_string.go")
+    line_string_tests = read("resample/line_string_test.go")
+    if "spacing := totalDistance / float64(totalPoints-1)" not in line_string or "if !validSpacing(spacing)" not in line_string:
+        failures.append("Resample must reject zero or underflowing callback totals before allocation and interpolation")
+    for test_name in [
+        "TestResampleRejectsZeroCallbackTotal",
+        "TestResamplePreservesMixedZeroCallbackSegments",
+    ]:
+        if f"func {test_name}(" not in line_string_tests:
+            failures.append(f"resample regression missing: {test_name}")
+    zero_callback_total_plan = read(ZERO_CALLBACK_TOTAL_PLAN)
+    zero_callback_total_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", zero_callback_total_plan
+    )
+    zero_callback_total_verification = markdown_section(
+        zero_callback_total_plan, "Verification Completed"
+    )
+    if (zero_callback_total_status != ["completed"] or
+            "Go 1.20.14" not in zero_callback_total_verification or
+            "Go 1.25.11" not in zero_callback_total_verification or
+            "make check" not in zero_callback_total_verification or
+            "external working directory" not in zero_callback_total_verification or
+            "isolated hostile mutations were rejected" not in zero_callback_total_verification or
+            re.search(r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                      zero_callback_total_verification)):
+        failures.append("zero callback total plan must record completed verification")
+    for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if "zero callback total" not in read(path).lower():
+            failures.append(f"{path} must document the zero callback total guard")
+    polygon_distance_index_plan = read(POLYGON_DISTANCE_INDEX_PLAN)
+    ring_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", polygon_distance_index_plan)
+    ring_work = markdown_section(polygon_distance_index_plan, "Work Completed")
+    ring_verification = markdown_section(polygon_distance_index_plan, "Verification Completed")
+    if ring_status != ["completed"] or not ring_work:
+        failures.append("polygon distance ring index plan must record one completed status and completed work")
+    if not ring_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", ring_verification
+    ):
+        failures.append("polygon distance ring index plan must record completed verification")
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 go test ./planar",
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.3 make check",
+        "git diff --check",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "27398396811",
+        "27398401926",
+        "dd2af0a49a33303c9336f67da7a39ac1c90a42f7",
+        "TestDistanceFromWithIndex_PolygonReturnsRingIndex",
+        "outer ring nearest on nonzero segment",
+        "index: 0",
+        "hole ring nearest on different segment",
+        "index: 1",
+        "TestDistanceFromWithIndex_EmptyPolygon",
+        "+Inf",
+        "-1",
+    ]:
+        if evidence not in ring_verification:
+            failures.append(f"polygon distance ring-index verification must record {evidence}")
     hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
     workflow = read(".github/workflows/check.yml")
+    workflow_files = [
+        *sorted((ROOT / ".github/workflows").glob("*.yml")),
+        *sorted((ROOT / ".github/workflows").glob("*.yaml")),
+    ]
     if "status: completed" not in hosted_validation_plan or "go test -race ./..." not in hosted_validation_plan:
         failures.append("hosted Go validation plan must record completed status and race verification")
     for expected in [
@@ -248,12 +674,147 @@ def main():
         "timeout-minutes: 15",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
-        'go-version: ["1.20.14", "1.25.3"]',
+        'go-version: ["1.20.14", "1.25.11"]',
         "GOTOOLCHAIN: local",
         "run: make check",
     ]:
         if expected not in workflow:
             failures.append(f"Check workflow must keep {expected}")
+
+    checkout_action = (
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"
+    )
+    checkout_blocks = re.findall(
+        rf"(?m)^(?P<indent> *)- +uses: +{re.escape(checkout_action)}[^\n]*\n"
+        rf"(?P=indent)  with:\n"
+        rf"(?P=indent)    persist-credentials: +false *$",
+        workflow,
+    )
+    checkout_actions = re.findall(r"(?m)^\s*-\s+uses:\s+actions/checkout@", workflow)
+    if not (
+        len(workflow_files) == 1
+        and workflow.count("permissions:") == 1
+        and workflow.count("contents: read") == 1
+        and not re.search(r"(?m)^\s*[A-Za-z-]+:\s*write\s*$", workflow)
+        and len(checkout_actions) == 1
+        and workflow.count(checkout_action) == 1
+        and len(checkout_blocks) == 1
+        and workflow.count("persist-credentials: false") == 1
+        and "persist-credentials: true" not in workflow
+    ):
+        failures.append(
+            "Check workflow must keep one read-only permission block and one "
+            "pinned, credential-free checkout"
+        )
+
+    checkout_plan = read(CHECKOUT_CREDENTIAL_PLAN)
+    checkout_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", checkout_plan)
+    checkout_work = markdown_section(checkout_plan, "Work Completed")
+    checkout_verification = markdown_section(checkout_plan, "Verification Completed")
+    if not (
+        checkout_status == ["completed"]
+        and checkout_work
+        and "make check" in checkout_verification
+    ):
+        failures.append(
+            "checkout credential plan must record one completed status, "
+            "completed work, and make check verification"
+        )
+
+    go_support_plan = read(GO_SUPPORT_PLAN)
+    go_support_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", go_support_plan)
+    go_support_work = markdown_section(go_support_plan, "Work Completed")
+    go_support_verification = markdown_section(go_support_plan, "Verification Completed")
+    if go_support_status != ["completed"] or not go_support_work:
+        failures.append(
+            "Go support plan must record one completed status and completed work"
+        )
+    if not go_support_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", go_support_verification
+    ):
+        failures.append("Go support plan must record completed verification")
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.3 make check",
+        "GOTOOLCHAIN=go1.20.14 go mod verify",
+        "GOTOOLCHAIN=go1.25.3 go mod verify",
+        "external working directory",
+        "workflow YAML",
+        "hostile mutations rejected",
+        "git diff --check",
+        "secret and generated-artifact scan",
+    ]:
+        if evidence not in go_support_verification:
+            failures.append(f"Go support verification must record {evidence}")
+
+    patched_lane_plan = read(PATCHED_MODERN_LANE_PLAN)
+    patched_lane_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", patched_lane_plan)
+    patched_lane_work = markdown_section(patched_lane_plan, "Work Completed")
+    patched_lane_verification = markdown_section(patched_lane_plan, "Verification Completed")
+    if patched_lane_status != ["completed"] or not patched_lane_work:
+        failures.append(
+            "patched modern Go lane plan must record one completed status and completed work"
+        )
+    if not patched_lane_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", patched_lane_verification
+    ):
+        failures.append("patched modern Go lane plan must record completed verification")
+    for evidence in [
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.11 make check",
+        "GOTOOLCHAIN=go1.20.14 go mod verify",
+        "GOTOOLCHAIN=go1.25.11 go mod verify",
+        "govulncheck",
+        "workflow YAML",
+        "hostile mutations",
+        "git diff --check",
+    ]:
+        if evidence not in patched_lane_verification:
+            failures.append(f"patched modern Go lane verification must record {evidence}")
+
+    location_make_plan = read(LOCATION_INDEPENDENT_MAKE_PLAN)
+    location_make_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", location_make_plan
+    )
+    location_make_work = markdown_section(location_make_plan, "Work Completed")
+    location_make_verification = markdown_section(
+        location_make_plan, "Verification Completed"
+    )
+    if location_make_status != ["completed"] or not location_make_work:
+        failures.append(
+            "location-independent Make plan must record one completed status "
+            "and completed work"
+        )
+    if not location_make_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", location_make_verification
+    ):
+        failures.append(
+            "location-independent Make plan must record completed verification"
+        )
+    for evidence in [
+        "make test",
+        "make race",
+        "make lint",
+        "make build",
+        "make static-check",
+        "make verify",
+        "make check",
+        "GOTOOLCHAIN=go1.20.14",
+        "GOTOOLCHAIN=go1.25.11",
+        "from `/tmp`",
+        "absolute",
+        "caller-supplied",
+        "REPO_ROOT=/tmp",
+        "GOTOOLCHAIN=go1.20.14 go mod verify",
+        "GOTOOLCHAIN=go1.25.11 go mod verify",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "workflow YAML parsed successfully",
+        "Twelve isolated hostile mutations were rejected",
+    ]:
+        if evidence not in location_make_verification:
+            failures.append(
+                f"location-independent Make verification must record {evidence}"
+            )
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

@@ -1,5 +1,48 @@
 # Changes
 
+## 2026-06-19
+
+- Bounded resampling output allocations to 64 MiB of points and rejected nil
+  distance callbacks, non-finite coordinates, and non-progressing sample spacing.
+- Switched interpolation to a finite overflow-safe weighted form and added
+  deterministic property coverage for point counts, endpoints, and progress.
+- Kept polygon distance indices at `-1` when no ring contains a segment.
+
+## 2026-06-15
+
+- Rejected nonfinite or integer-overflowing derived `ToInterval` point counts
+  before integer conversion and output allocation.
+- Rejected negative derived point counts from invalid distance callbacks before
+  conversion and allocation.
+- Rejected non-finite callback distances and callback-derived cumulative totals
+  before either resampling entry point interpolates or allocates output points.
+- Rejected negative callback segment distances before accumulation in both
+  resampling entry points.
+- Rejected a zero callback total before either resampling path interpolates while
+  preserving mixed zero-length and positive callback segments.
+
+## 2026-06-14
+
+- Rejected non-finite `resample.ToInterval` distances before distance callback
+  execution or point-count conversion, preventing a `NaN`-driven panic.
+- Added regression and static contract coverage for `NaN` and both infinities.
+
+## 2026-06-13
+
+- Made every standard Make gate resolve Go module and checker paths from the
+  repository root, including absolute-Makefile calls from external directories.
+- Documented the Go 1.20 compatibility minimum, fixed 1.20.14 and patched 1.25.11
+  validation roles, local-toolchain boundary, module-path stability,
+  dependency-integrity checks, and generated protobuf expectations.
+
+## 2026-06-12
+
+- Disabled checkout credential persistence in the pinned, read-only hosted
+  validation job and added structural checks for that boundary.
+- Corrected `planar.DistanceFromWithIndex` for polygons to return the matching
+  ring index instead of an outer or hole segment index.
+- Added outer-ring, hole-ring, and empty-polygon regression coverage.
+
 ## 2026-06-09
 
 - Made planar containment helpers treat empty rings and polygons as

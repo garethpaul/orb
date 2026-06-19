@@ -47,7 +47,11 @@ and projection edge cases. Run `make check`, `make lint`, `make build`,
 `make verify`, and `go test ./...` before changing parsers, encoders, generated
 protobuf code, or fixture data.
 The canonical gate also runs the Go race detector, and pinned hosted Linux jobs
-exercise both the declared Go 1.20 baseline and the newer Go 1.25 toolchain.
+use credential-free checkout while exercising both the declared Go 1.20
+baseline and the patched Go 1.25.11 toolchain.
+The Go support contract requires `GOTOOLCHAIN=local`, no checked-in `toolchain`
+directive, synchronized module checksums, `go mod verify`, and review of direct
+and transitive dependency changes on both fixed toolchains.
 Degenerate rings should remain panic-resistant because geometry libraries are
 often used in data pipelines that receive malformed input.
 Empty line strings should also remain panic-resistant in helper methods such as
@@ -62,8 +66,28 @@ Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
 Empty interval resampling should return before allocating segment distances or
 calling caller-provided distance functions.
+Non-finite interval distances should be rejected before distance callbacks or
+point-count conversion so malformed numeric input cannot trigger a panic or
+unexpected allocation.
+Derived point counts for resampling should be rejected before conversion or
+allocation when interval division is nonfinite or exceeds the platform integer
+range.
+Negative derived point counts from caller distance callbacks should fail closed
+before conversion or allocation.
+Non-finite callback distances and callback-derived cumulative totals should
+fail closed before either resampling path interpolates or allocates output points.
+Negative callback segment distances should fail closed before accumulation so
+later positive segments cannot mask invalid cumulative geometry.
+A zero callback total should fail closed before `Resample` interpolation so a
+malformed distance callback cannot prevent forward progress.
+Nil callbacks, non-finite coordinates, underflowing sample spacing, and point
+requests above the 64 MiB resampling output budget should fail closed before
+allocation or interpolation.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
+Polygon distance indices should identify the matching immediate ring rather
+than an internal segment; polygons without usable segments should return index
+`-1` so callers do not select unrelated geometry.
 
 ## Safe Research Guidelines
 

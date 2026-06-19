@@ -40,12 +40,26 @@ Priority:
 - Keep leading empty polygons safe in multipolygon bound aggregation
 - Keep empty rings and polygons safe in planar containment helpers
 - Keep empty interval resampling safe before distance precomputation
+- Keep non-finite interval distances out of resampling calculations and
+  caller-provided distance callbacks
+- Keep nonfinite and integer-overflowing derived point counts out of resampling
+  allocation
+- Keep negative derived point counts out of resampling conversion and allocation
+- Keep non-finite callback distances and cumulative totals out of both resampling entry points
+- Keep negative callback segment distances out of cumulative resampling geometry
+- Keep a zero callback total out of interpolation while preserving mixed
+  zero-length and positive callback segments
+- Keep resampling callback, coordinate, progress, and output-allocation
+  boundaries finite and explicitly bounded
+- Keep polygon distance indices aligned with the matching immediate ring
 - Keep the race detector in the canonical verification gate
-- Keep fixed Go 1.20 and Go 1.25 validation in pinned hosted Linux CI
+- Keep fixed Go 1.20.14 and patched Go 1.25.11 validation in pinned, read-only,
+  credential-free hosted Linux CI
+- Keep the Go compatibility minimum, modern validation lane, module path,
+  toolchain-selection boundary, and generated-code expectations explicit
 
 Next priorities:
 
-- Document supported Go versions and module expectations
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
 - Add resampling fixtures for empty, single-point, and zero-length lines

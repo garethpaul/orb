@@ -58,12 +58,19 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Import packages using the module path `github.com/paulmach/orb`.
+- Read [`docs/go-support.md`](docs/go-support.md) before changing the minimum Go
+  version, module path, dependency graph, generated protobuf surfaces, or fixed
+  hosted toolchains.
 - This repository is a library, not a standalone service. Start with the package
   READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
 - Run `make check` before changing geometry algorithms, encoders, generated
   protobuf code, or fixture data.
+- `resample.Resample` rejects an all-zero callback total before interpolation,
+  while preserving mixed zero-length and positive callback segments.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go
   vet, build-through-test, and full verification gates.
+- Standard Make aliases resolve Go and checker paths from `Makefile`, so an
+  absolute Makefile path works from another directory without changing gates.
 - Core ring helpers treat degenerate rings as non-closed or zero-orientation
   inputs instead of panicking.
 - `LineString.Reverse` handles empty line strings without panicking.
@@ -79,8 +86,23 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   sentinels into aggregate bounds.
 - Empty interval resampling returns empty line strings before distance
   precomputation, avoiding negative slice sizes and callback execution.
+- Non-finite interval distances are rejected before distance callbacks or
+  point-count conversion, preventing malformed numeric input from panicking.
+- Nonfinite or integer-overflowing derived point counts are rejected before
+  integer conversion or output allocation.
+- Negative derived point counts from invalid caller distance callbacks are also
+  rejected before conversion or allocation.
+- Non-finite callback distances and callback-derived cumulative totals are
+  rejected before either resampling path interpolates or allocates output points.
+- Negative callback segment distances are rejected before accumulation so a
+  later positive segment cannot mask invalid cumulative geometry.
+- Resampling rejects nil distance callbacks, non-finite coordinates,
+  non-progressing floating-point spacing, and output requests above the 64 MiB
+  point-allocation budget.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
+- `planar.DistanceFromWithIndex` returns the matching polygon ring index rather
+  than leaking a segment index; empty or segmentless polygons remain `+Inf, -1`.
 
 ## Testing and Verification
 
@@ -92,8 +114,12 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `go test -race ./...`
 - `go vet ./...`
 - `python3 scripts/check-baseline.py`
-- Pinned hosted Linux validation runs the full gate, including the race
-  detector, on Go 1.20.14 and Go 1.25.3 with toolchain auto-upgrades disabled.
+- Pinned hosted Linux validation uses a read-only, credential-free checkout and
+  runs the full gate, including the race detector, on Go 1.20.14 and Go 1.25.11
+  with toolchain auto-upgrades disabled.
+- Go 1.20 is the declared compatibility minimum; Go 1.20.14 is its fixed final
+  patch lane, while Go 1.25.11 is patched modern-toolchain validation rather than a
+  raised minimum or blanket promise for future releases.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -121,6 +147,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Leading empty polygons should remain safe in multipolygon bound aggregation.
 - Empty rings and polygons should be rejected by planar containment helpers
   instead of panicking.
+- Non-finite interval distances should remain rejected before resampling
+  calculations or caller-provided distance callbacks.
 
 ## Maintenance Notes
 
