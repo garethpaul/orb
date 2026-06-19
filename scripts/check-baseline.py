@@ -356,6 +356,8 @@ def main():
             failures.append(f"polygon distance ring-index verification must record {evidence}")
     hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
     workflow = read(".github/workflows/check.yml")
+    jobs = workflow.split("jobs:\n", 1)[1] if workflow.count("jobs:\n") == 1 else ""
+    job_ids = re.findall(r"(?m)^  ([A-Za-z0-9_-]+):\s*$", jobs)
     workflow_files = [
         *sorted((ROOT / ".github/workflows").glob("*.yml")),
         *sorted((ROOT / ".github/workflows").glob("*.yaml")),
@@ -369,12 +371,26 @@ def main():
         "timeout-minutes: 15",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
-        'go-version: ["1.20.14", "1.25.11"]',
+        'go-version: ["1.24.0", "1.25.3", "1.25.11"]',
         "GOTOOLCHAIN: local",
-        "run: make check",
     ]:
         if expected not in workflow:
             failures.append(f"Check workflow must keep {expected}")
+    if not (
+        job_ids == ["test"]
+        and workflow.count('go-version: ["1.24.0", "1.25.3", "1.25.11"]') == 1
+        and workflow.count("go-version: ${{ matrix.go-version }}") == 1
+        and len(re.findall(r"(?m)^      - run: make check\s*$", workflow)) == 1
+        and not re.search(r"(?m)^    name:\s*", jobs)
+        and not re.search(r"(?m)^        (?:include|exclude):\s*", jobs)
+        and "continue-on-error:" not in workflow
+        and "needs:" not in workflow
+        and "if: always()" not in workflow
+    ):
+        failures.append(
+            "Check workflow must emit three real test matrix lanes that each "
+            "run make check without an aggregator or fail-open behavior"
+        )
 
     checkout_action = (
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"
