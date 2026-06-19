@@ -96,10 +96,13 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   rejected before either resampling path interpolates or allocates output points.
 - Negative callback segment distances are rejected before accumulation so a
   later positive segment cannot mask invalid cumulative geometry.
+- Resampling rejects nil distance callbacks, non-finite coordinates,
+  non-progressing floating-point spacing, and output requests above the 64 MiB
+  point-allocation budget.
 - Planar containment treats empty rings and polygons as non-containing inputs
   instead of panicking.
 - `planar.DistanceFromWithIndex` returns the matching polygon ring index rather
-  than leaking a segment index; empty polygons remain `+Inf, -1`.
+  than leaking a segment index; empty or segmentless polygons remain `+Inf, -1`.
 
 ## Testing and Verification
 

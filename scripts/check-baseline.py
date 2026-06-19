@@ -176,10 +176,7 @@ def main():
     resample = read("resample/line_string.go")
     resample_tests = read("resample/line_string_test.go")
     interval_start = resample.find("func ToInterval")
-    finite_interval_guard = resample.find(
-        "if dist <= 0 || math.IsNaN(dist) || math.IsInf(dist, 0)",
-        interval_start,
-    )
+    finite_interval_guard = resample.find("if !validSpacing(dist)", interval_start)
     interval_guard = resample.find("if len(ls) <= 1", interval_start)
     distance_setup = resample.find("total, dists, ok := precomputeDistances(ls, df)", interval_start)
     point_count_setup = resample.find("pointCount := total / dist", distance_setup)
@@ -223,8 +220,8 @@ def main():
     if not (
         distance_setup < point_count_setup < point_count_guard < point_count_conversion
         and "pointCount < 0" in resample
-        and "pointCount >= float64(maxInt)" in resample
-        and "maxInt := int(^uint(0) >> 1)" in resample
+        and "pointCount >= float64(maxResamplePoints)" in resample
+        and "maxResampleAllocationBytes = 64 << 20" in resample
     ):
         failures.append(
             "ToInterval must reject negative, non-finite, and int-overflowing derived point counts before conversion"
@@ -281,12 +278,21 @@ def main():
             failures.append(
                 f"resample tests must preserve derived point-count coverage: {phrase}"
             )
+    for phrase in [
+        "TestResampleRejectsNilDistanceFunction",
+        "TestResampleRejectsUnboundedPointCount",
+        "TestResampleRejectsUnderflowedSpacing",
+        "TestResampleKeepsFiniteCoordinatesFinite",
+        "TestResampleStraightLineProperties",
+    ]:
+        if phrase not in resample_tests:
+            failures.append(f"resample safety regression missing: {phrase}")
     distance_from = read("planar/distance_from.go")
     distance_from_tests = read("planar/distance_from_test.go")
     for phrase in [
         "index of the immediate child",
-        "dist, _ := lineStringDistanceFrom(orb.LineString(p[0]), point)",
-        "index := 0",
+        "dist := math.Inf(1)",
+        "index := -1",
         "d, _ := lineStringDistanceFrom(orb.LineString(p[i]), point)",
         "index = i",
     ]:
@@ -297,6 +303,7 @@ def main():
         "outer ring nearest on nonzero segment",
         "hole ring nearest on different segment",
         "TestDistanceFromWithIndex_EmptyPolygon",
+        "TestDistanceFromWithIndex_PolygonWithoutSegments",
     ]:
         if phrase not in distance_from_tests:
             failures.append(f"polygon distance tests must include {phrase}")
@@ -595,8 +602,8 @@ def main():
             failures.append(f"{path} must document negative callback segment distances")
     line_string = read("resample/line_string.go")
     line_string_tests = read("resample/line_string_test.go")
-    if "if total == 0 {\n\t\treturn nil\n\t}" not in line_string:
-        failures.append("Resample must reject a zero callback total before interpolation")
+    if "spacing := totalDistance / float64(totalPoints-1)" not in line_string or "if !validSpacing(spacing)" not in line_string:
+        failures.append("Resample must reject zero or underflowing callback totals before allocation and interpolation")
     for test_name in [
         "TestResampleRejectsZeroCallbackTotal",
         "TestResamplePreservesMixedZeroCallbackSegments",

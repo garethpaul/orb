@@ -191,3 +191,11 @@ func TestDistanceFromWithIndex_EmptyPolygon(t *testing.T) {
 		t.Fatalf("empty polygon result: (%v, %d) != (+Inf, -1)", distance, index)
 	}
 }
+
+func TestDistanceFromWithIndex_PolygonWithoutSegments(t *testing.T) {
+	polygon := orb.Polygon{nil, {}, {{1, 1}}}
+	distance, index := DistanceFromWithIndex(polygon, orb.Point{})
+	if !math.IsInf(distance, 1) || index != -1 {
+		t.Fatalf("segmentless polygon result: (%v, %d) != (+Inf, -1)", distance, index)
+	}
+}

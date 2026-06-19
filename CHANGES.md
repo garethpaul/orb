@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-06-19
+
+- Bounded resampling output allocations to 64 MiB of points and rejected nil
+  distance callbacks, non-finite coordinates, and non-progressing sample spacing.
+- Switched interpolation to a finite overflow-safe weighted form and added
+  deterministic property coverage for point counts, endpoints, and progress.
+- Kept polygon distance indices at `-1` when no ring contains a segment.
+
 ## 2026-06-15
 
 - Rejected nonfinite or integer-overflowing derived `ToInterval` point counts
@@ -10,7 +18,7 @@
   before either resampling entry point interpolates or allocates output points.
 - Rejected negative callback segment distances before accumulation in both
   resampling entry points.
-- Rejected a zero callback total before `Resample` interpolation while
+- Rejected a zero callback total before either resampling path interpolates while
   preserving mixed zero-length and positive callback segments.
 
 ## 2026-06-14

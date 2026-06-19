@@ -136,9 +136,9 @@ func polygonDistanceFrom(p orb.Polygon, point orb.Point) (float64, int) {
 		return math.Inf(1), -1
 	}
 
-	dist, _ := lineStringDistanceFrom(orb.LineString(p[0]), point)
-	index := 0
-	for i := 1; i < len(p); i++ {
+	dist := math.Inf(1)
+	index := -1
+	for i := 0; i < len(p); i++ {
 		d, _ := lineStringDistanceFrom(orb.LineString(p[i]), point)
 		if d < dist {
 			dist = d

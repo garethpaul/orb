@@ -80,10 +80,14 @@ Negative callback segment distances should fail closed before accumulation so
 later positive segments cannot mask invalid cumulative geometry.
 A zero callback total should fail closed before `Resample` interpolation so a
 malformed distance callback cannot prevent forward progress.
+Nil callbacks, non-finite coordinates, underflowing sample spacing, and point
+requests above the 64 MiB resampling output budget should fail closed before
+allocation or interpolation.
 Empty rings and polygons should remain panic-resistant in planar containment
 helpers.
 Polygon distance indices should identify the matching immediate ring rather
-than an internal segment so callers do not select unrelated geometry.
+than an internal segment; polygons without usable segments should return index
+`-1` so callers do not select unrelated geometry.
 
 ## Safe Research Guidelines
 
