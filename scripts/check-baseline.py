@@ -371,14 +371,15 @@ def main():
         "timeout-minutes: 15",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
-        'go-version: ["1.24.0", "1.25.3", "1.25.11"]',
+        'go-version: ["1.20.14", "1.25.3", "1.25.11"]',
         "GOTOOLCHAIN: local",
     ]:
         if expected not in workflow:
             failures.append(f"Check workflow must keep {expected}")
     if not (
         job_ids == ["test"]
-        and workflow.count('go-version: ["1.24.0", "1.25.3", "1.25.11"]') == 1
+        and workflow.count('go-version: ["1.20.14", "1.25.3", "1.25.11"]') == 1
+        and "1.24.0" not in workflow
         and workflow.count("go-version: ${{ matrix.go-version }}") == 1
         and len(re.findall(r"(?m)^      - run: make check\s*$", workflow)) == 1
         and not re.search(r"(?m)^    name:\s*", jobs)

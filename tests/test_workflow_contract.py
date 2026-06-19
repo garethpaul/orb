@@ -12,7 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/check.yml"
 CHECKER = ROOT / "scripts/check-baseline.py"
-EXPECTED_MATRIX = 'go-version: ["1.24.0", "1.25.3", "1.25.11"]'
+EXPECTED_MATRIX = 'go-version: ["1.20.14", "1.25.3", "1.25.11"]'
 
 
 class ThreeLaneWorkflowContractTest(unittest.TestCase):
@@ -20,6 +20,7 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn(EXPECTED_MATRIX, workflow)
+        self.assertNotIn("1.24.0", workflow)
         self.assertEqual(1, len(re.findall(r"(?m)^  test:\s*$", workflow)))
         self.assertEqual(1, len(re.findall(r"(?m)^      - run: make check\s*$", workflow)))
         self.assertIn("go-version: ${{ matrix.go-version }}", workflow)
@@ -33,12 +34,14 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
         mutations = {
             "drops protected lane": workflow.replace(
                 EXPECTED_MATRIX,
-                'go-version: ["1.24.0", "1.25.11"]',
+                'go-version: ["1.20.14", "1.25.11"]',
             ),
-            "restores obsolete baseline": workflow.replace("1.24.0", "1.20.14"),
+            "introduces unsupported Go 1.24 lane": workflow.replace(
+                "1.20.14", "1.24.0"
+            ),
             "uses fake protected-context aggregator": workflow.replace(
                 EXPECTED_MATRIX,
-                'go-version: ["1.24.0", "1.25.11"]',
+                'go-version: ["1.20.14", "1.25.11"]',
             )
             + "\n  compatibility:\n"
             + "    name: test (1.25.3)\n"
