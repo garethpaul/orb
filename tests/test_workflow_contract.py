@@ -74,6 +74,26 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
                 "      matrix:\n",
                 "      matrix:\n        include:\n          - go-version: 1.26.1\n",
             ),
+            "skips the workflow": workflow.replace(
+                "permissions:\n",
+                "if: false\npermissions:\n",
+                1,
+            ),
+            "skips the test job": workflow.replace(
+                "  test:\n",
+                "  test:\n    if: false\n",
+                1,
+            ),
+            "skips the required step": workflow.replace(
+                "      - run: make check",
+                "      - run: make check\n        if: false",
+                1,
+            ),
+            "syntax-checks without executing the required step": workflow.replace(
+                "      - run: make check",
+                "      - run: make check\n        shell: bash -n {0}",
+                1,
+            ),
         }
 
         self.assertTrue(all(content != workflow for content in mutations.values()))
@@ -98,6 +118,41 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
                         result.returncode,
                         f"checker accepted hostile mutation: {name}",
                     )
+
+    def test_make_check_executes_the_workflow_contract_suite(self):
+        result = subprocess.run(
+            ["make", "-n", "check"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn(
+            'python3 "' + str(ROOT / "tests/test_workflow_contract.py") + '"',
+            result.stdout,
+        )
+
+    def test_checker_rejects_deleted_workflow_contract_suite(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            repository = Path(temporary_directory) / "orb"
+            shutil.copytree(ROOT, repository, ignore=shutil.ignore_patterns(".git"))
+            (repository / "tests/test_workflow_contract.py").unlink()
+
+            result = subprocess.run(
+                ["python3", str(repository / CHECKER.relative_to(ROOT))],
+                cwd=repository,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn(
+                "required file missing: tests/test_workflow_contract.py",
+                result.stderr,
+            )
 
 
 if __name__ == "__main__":

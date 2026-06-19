@@ -1,4 +1,4 @@
-.PHONY: build check lint race static-check test verify vet
+.PHONY: build check lint race static-check test verify vet workflow-contract
 
 override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -19,5 +19,8 @@ race:
 vet:
 	cd "$(REPO_ROOT)" && go vet ./...
 
-static-check:
+static-check: workflow-contract
 	python3 "$(REPO_ROOT)/scripts/check-baseline.py"
+
+workflow-contract:
+	python3 "$(REPO_ROOT)/tests/test_workflow_contract.py"
