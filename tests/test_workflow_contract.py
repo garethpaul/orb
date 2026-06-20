@@ -32,9 +32,17 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(EXPECTED_MATRIX, workflow)
         mutations = {
-            "drops protected lane": workflow.replace(
+            "drops minimum compatibility lane": workflow.replace(
+                EXPECTED_MATRIX,
+                'go-version: ["1.25.3", "1.25.11"]',
+            ),
+            "drops bridge compatibility lane": workflow.replace(
                 EXPECTED_MATRIX,
                 'go-version: ["1.20.14", "1.25.11"]',
+            ),
+            "drops patched modern lane": workflow.replace(
+                EXPECTED_MATRIX,
+                'go-version: ["1.20.14", "1.25.3"]',
             ),
             "introduces unsupported Go 1.24 lane": workflow.replace(
                 "1.20.14", "1.24.0"
@@ -74,6 +82,10 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
                 "      matrix:\n",
                 "      matrix:\n        include:\n          - go-version: 1.26.1\n",
             ),
+            "excludes the bridge compatibility lane": workflow.replace(
+                "      matrix:\n",
+                "      matrix:\n        exclude:\n          - go-version: 1.25.3\n",
+            ),
             "skips the workflow": workflow.replace(
                 "permissions:\n",
                 "if: false\npermissions:\n",
@@ -92,6 +104,16 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
             "syntax-checks without executing the required step": workflow.replace(
                 "      - run: make check",
                 "      - run: make check\n        shell: bash -n {0}",
+                1,
+            ),
+            "masks make failure with shell success": workflow.replace(
+                "      - run: make check",
+                "      - run: make check || true",
+                1,
+            ),
+            "masks make failure through a pipeline": workflow.replace(
+                "      - run: make check",
+                "      - run: make check | tee check.log",
                 1,
             ),
         }
@@ -153,6 +175,20 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
                 "required file missing: tests/test_workflow_contract.py",
                 result.stderr,
             )
+
+    def test_workflow_contract_fails_when_python_is_missing(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            result = subprocess.run(
+                [shutil.which("make"), "workflow-contract"],
+                cwd=ROOT,
+                env={"PATH": temporary_directory},
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("python3", result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
