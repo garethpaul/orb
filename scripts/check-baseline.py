@@ -21,6 +21,36 @@ NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.
 NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
 NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
 ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
+EXPECTED_CHECK_WORKFLOW = """name: Check
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ["1.20.14", "1.25.3", "1.25.11"]
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: go.sum
+      - run: make check
+"""
 REQUIRED = [
     ".github/workflows/check.yml",
     ".gitignore",
@@ -58,6 +88,7 @@ REQUIRED = [
     NEGATIVE_CALLBACK_SEGMENT_PLAN,
     ZERO_CALLBACK_TOTAL_PLAN,
     "scripts/check-baseline.py",
+    "tests/test_workflow_contract.py",
 ]
 
 
@@ -103,7 +134,9 @@ def main():
         'cd "$(REPO_ROOT)" && go test -race ./...',
         'cd "$(REPO_ROOT)" && go vet ./...',
         'python3 "$(REPO_ROOT)/scripts/check-baseline.py"',
+        'python3 "$(REPO_ROOT)/tests/test_workflow_contract.py"',
         "check: test race lint static-check",
+        "static-check: workflow-contract",
         "lint: vet",
         "build: test",
         "verify: check",
@@ -661,6 +694,12 @@ def main():
             failures.append(f"polygon distance ring-index verification must record {evidence}")
     hosted_validation_plan = read(HOSTED_VALIDATION_PLAN)
     workflow = read(".github/workflows/check.yml")
+    if workflow != EXPECTED_CHECK_WORKFLOW:
+        failures.append(
+            "Check workflow must exactly match the reviewed three-lane execution contract"
+        )
+    jobs = workflow.split("jobs:\n", 1)[1] if workflow.count("jobs:\n") == 1 else ""
+    job_ids = re.findall(r"(?m)^  ([A-Za-z0-9_-]+):\s*$", jobs)
     workflow_files = [
         *sorted((ROOT / ".github/workflows").glob("*.yml")),
         *sorted((ROOT / ".github/workflows").glob("*.yaml")),
@@ -674,12 +713,27 @@ def main():
         "timeout-minutes: 15",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c",
-        'go-version: ["1.20.14", "1.25.11"]',
+        'go-version: ["1.20.14", "1.25.3", "1.25.11"]',
         "GOTOOLCHAIN: local",
-        "run: make check",
     ]:
         if expected not in workflow:
             failures.append(f"Check workflow must keep {expected}")
+    if not (
+        job_ids == ["test"]
+        and workflow.count('go-version: ["1.20.14", "1.25.3", "1.25.11"]') == 1
+        and "1.24.0" not in workflow
+        and workflow.count("go-version: ${{ matrix.go-version }}") == 1
+        and len(re.findall(r"(?m)^      - run: make check\s*$", workflow)) == 1
+        and not re.search(r"(?m)^    name:\s*", jobs)
+        and not re.search(r"(?m)^        (?:include|exclude):\s*", jobs)
+        and "continue-on-error:" not in workflow
+        and "needs:" not in workflow
+        and "if: always()" not in workflow
+    ):
+        failures.append(
+            "Check workflow must emit three real test matrix lanes that each "
+            "run make check without an aggregator or fail-open behavior"
+        )
 
     checkout_action = (
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"
