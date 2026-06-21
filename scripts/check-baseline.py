@@ -15,6 +15,7 @@ CHECKOUT_CREDENTIAL_PLAN = "docs/plans/2026-06-12-checkout-credential-boundary.m
 GO_SUPPORT_PLAN = "docs/plans/2026-06-13-go-support-contract.md"
 PATCHED_MODERN_LANE_PLAN = "docs/plans/2026-06-13-patched-modern-go-lane.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = "docs/plans/2026-06-13-location-independent-make-gates.md"
+SAFE_MAKE_ROOT_PLAN = "docs/plans/2026-06-21-safe-make-root.md"
 NONFINITE_INTERVAL_PLAN = "docs/plans/2026-06-14-nonfinite-resample-interval.md"
 DERIVED_POINT_COUNT_PLAN = "docs/plans/2026-06-15-derived-point-count-guard.md"
 NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.md"
@@ -81,6 +82,7 @@ REQUIRED = [
     GO_SUPPORT_PLAN,
     PATCHED_MODERN_LANE_PLAN,
     LOCATION_INDEPENDENT_MAKE_PLAN,
+    SAFE_MAKE_ROOT_PLAN,
     NONFINITE_INTERVAL_PLAN,
     DERIVED_POINT_COUNT_PLAN,
     NEGATIVE_POINT_COUNT_PLAN,
@@ -88,6 +90,7 @@ REQUIRED = [
     NEGATIVE_CALLBACK_SEGMENT_PLAN,
     ZERO_CALLBACK_TOTAL_PLAN,
     "scripts/check-baseline.py",
+    "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
 ]
 
@@ -129,13 +132,18 @@ def main():
 
     makefile = read("Makefile")
     for phrase in [
-        "override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
-        'cd "$(REPO_ROOT)" && go test ./...',
-        'cd "$(REPO_ROOT)" && go test -race ./...',
-        'cd "$(REPO_ROOT)" && go vet ./...',
-        'python3 "$(REPO_ROOT)/scripts/check-baseline.py"',
-        'python3 "$(REPO_ROOT)/tests/test_workflow_contract.py"',
-        "check: test race lint static-check",
+        "ifneq ($(origin MAKEFILE_LIST),file)",
+        "$(error MAKEFILE_LIST must not be overridden)",
+        "override REPO_ROOT := $(shell path=",
+        "export REPO_ROOT",
+        'CDPATH= cd -- "$$directory" && /bin/pwd -P)',
+        'cd "$$REPO_ROOT" && go test ./...',
+        'cd "$$REPO_ROOT" && go test -race ./...',
+        'cd "$$REPO_ROOT" && go vet ./...',
+        'python3 "$$REPO_ROOT/scripts/check-baseline.py"',
+        'python3 "$$REPO_ROOT/tests/test_workflow_contract.py"',
+        'PYTHONDONTWRITEBYTECODE=1 python3 "$$REPO_ROOT/tests/test_makefile_root.py"',
+        "check: test race lint static-check root-test",
         "static-check: workflow-contract",
         "lint: vet",
         "build: test",

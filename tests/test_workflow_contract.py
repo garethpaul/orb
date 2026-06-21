@@ -152,7 +152,7 @@ class ThreeLaneWorkflowContractTest(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn(
-            'python3 "' + str(ROOT / "tests/test_workflow_contract.py") + '"',
+            'python3 "$REPO_ROOT/tests/test_workflow_contract.py"',
             result.stdout,
         )
 
