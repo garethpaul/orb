@@ -34,6 +34,14 @@ func TestValid(t *testing.T) {
 	if New(16, 16, 4).Valid() {
 		t.Errorf("should not be valid")
 	}
+
+	if !New(math.MaxUint32, math.MaxUint32, 32).Valid() {
+		t.Errorf("maximum zoom tile should be valid")
+	}
+
+	if New(0, 0, 33).Valid() {
+		t.Errorf("zoom beyond uint32 tile coordinates should not be valid")
+	}
 }
 
 func TestAt(t *testing.T) {
@@ -71,6 +79,14 @@ func TestAt(t *testing.T) {
 
 	if tile := At(orb.Point{0, -89.9}, 30); tile.Y != (1<<30)-1 {
 		t.Errorf("bottom of the world error: %d != %d", tile.Y, (1<<30)-1)
+	}
+
+	tile = At(orb.Point{0, 0}, 32)
+	if tile != New(1<<31, 1<<31, 32) {
+		t.Errorf("zoom 32 projection incorrect: %v", tile)
+	}
+	if center := tile.Center(); math.Abs(center[0]) > mercator.Epsilon || math.Abs(center[1]) > mercator.Epsilon {
+		t.Errorf("zoom 32 center incorrect: %v", center)
 	}
 }
 
@@ -138,6 +154,11 @@ func TestFraction(t *testing.T) {
 	p = Fraction(orb.Point{360, 0}, 30)
 	if p[0] != 1<<30+1<<29 {
 		t.Errorf("incorrect x: %f != %v", p[0], 1<<30+1<<29)
+	}
+
+	p = Fraction(orb.Point{180, 0}, 32)
+	if p[0] != 1<<32 {
+		t.Errorf("zoom 32 x incorrect: %f != %v", p[0], 1<<32)
 	}
 }
 

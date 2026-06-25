@@ -1,5 +1,24 @@
 # Changes
 
+## 2026-06-25T20:30:44Z — P1 correctness — cycle: maptile zoom boundary
+
+- Threads: inspected the default branch, recent pull requests, hosted checks,
+  repository contracts, projection helpers, tile arithmetic, and existing
+  boundary coverage; no open pull requests or issues were present.
+- Bug fixed: preserved the `2^32` Web Mercator scale instead of narrowing it
+  to zero, restoring zoom-32 tile validation, point projection, bounds, and
+  scalar Mercator round trips; zooms above the `uint32` coordinate capacity
+  now produce invalid `At` tiles.
+- Files: `maptile/tile.go`, `maptile/tile_test.go`,
+  `internal/mercator/mercator.go`, and `internal/mercator/mercator_test.go`.
+- Validation: reproduced four zoom-32 failures on Go 1.20.14, then passed all
+  tests, race tests, and vet on Go 1.20.14 and Go 1.25.11 plus static baseline,
+  hosted-workflow contract, and Make root contract checks.
+- Blockers: the host has no Go executable, so validation used pinned official
+  Docker images; no implementation or release blocker remains.
+- Next: define compatibility semantics for `Children`, `Range`, and internal
+  Mercator calls above the representable tile zoom before changing them.
+
 ## 2026-06-21
 
 - Made absolute Makefile verification safe for spaces and apostrophes,

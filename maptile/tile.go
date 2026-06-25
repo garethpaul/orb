@@ -35,16 +35,24 @@ type Tile struct {
 // A Zoom is a strict type for a tile zoom level.
 type Zoom uint32
 
+// MaxZoom is the highest zoom whose complete tile coordinate range fits in uint32.
+const MaxZoom Zoom = 32
+
 // New creates a new tile with the given coordinates.
 func New(x, y uint32, z Zoom) Tile {
 	return Tile{x, y, z}
 }
 
 // At creates a tile for the point at the given zoom.
-// Will create a valid tile for the zoom. Points outside
+// Will create a valid tile through MaxZoom. Higher zooms return an invalid tile.
+// Points outside
 // the range lat [-85.0511, 85.0511] will be snapped to the
 // max or min tile as appropriate.
 func At(ll orb.Point, z Zoom) Tile {
+	if z > MaxZoom {
+		return Tile{Z: z}
+	}
+
 	f := Fraction(ll, z)
 	t := Tile{
 		X: uint32(f[0]),
@@ -69,6 +77,13 @@ func FromQuadkey(k uint64, z Zoom) Tile {
 
 // Valid returns if the tile's x/y are within the range for the tile's zoom.
 func (t Tile) Valid() bool {
+	if t.Z > MaxZoom {
+		return false
+	}
+	if t.Z == MaxZoom {
+		return true
+	}
+
 	maxIndex := uint32(1) << uint32(t.Z)
 	return t.X < maxIndex && t.Y < maxIndex
 }
@@ -97,7 +112,7 @@ func (t Tile) Bound(tileBuffer ...float64) orb.Bound {
 
 	maxx := x + 1 + buffer
 
-	maxtiles := float64(uint32(1 << t.Z))
+	maxtiles := math.Exp2(float64(t.Z))
 	maxy := y + 1 + buffer
 	if maxy > maxtiles {
 		maxy = maxtiles
@@ -143,8 +158,7 @@ func (t Tile) Parent() Tile {
 func Fraction(ll orb.Point, z Zoom) orb.Point {
 	var p orb.Point
 
-	factor := uint32(1 << z)
-	maxtiles := float64(factor)
+	maxtiles := math.Exp2(float64(z))
 
 	lng := ll[0]/360.0 + 0.5
 	p[0] = lng * maxtiles
