@@ -20,14 +20,15 @@
   Make authority. Exact-head review then reproduced an above-ceiling `MergeUp`
   panic; after guarding both merge variants, the complete two-version gates
   pass again and six hostile boundary mutations, including removal of either
-  merge guard, are rejected. Hosted and final review evidence remains pending.
+  merge guard, are rejected. Exact-head Codex review at `0ecd00c` reported no
+  actionable findings, and both hosted test matrices plus all CodeQL lanes
+  passed.
 - Findings: `MaxZoom` must bound descendant construction as well as projection;
   invalidity by zoom alone does not prevent callers from consuming wrapped X/Y,
   and callers that expect four siblings must reject unrepresentable levels.
 - Blockers: no local Go binary; cached network-isolated Go containers provide
   local validation, with hosted CI required for the repository's exact matrix.
-- Next: run exact-head Codex review and hosted checks; merge only when all
-  evidence is clean.
+- Next: merge the clean pull request and persist the cycle evidence.
 
 ## 2026-06-25T20:30:44Z — P1 correctness — cycle: maptile zoom boundary
 

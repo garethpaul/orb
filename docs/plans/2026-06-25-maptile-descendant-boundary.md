@@ -44,4 +44,6 @@ target zooms.
 - Six hostile mutations were rejected: missing and strict child guards,
   missing range guard, noncanonical invalid range payload, and removal of
   either complete or partial merge guard.
-- Hosted checks and exact-head review remain required before merge.
+- Exact-head Codex review at `0ecd00c` reported no actionable findings.
+- Both hosted test matrices passed on Go 1.20.14, Go 1.25.3, and Go 1.25.11;
+  the actions, Go, and Python CodeQL analyses also passed.
