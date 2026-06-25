@@ -83,9 +83,10 @@ func line(
 		tdy := math.Abs(sy / dy)
 
 		if x != prevX || y != prevY {
-			set[maptile.New(uint32(x), uint32(y), zoom)] = true
+			tile := boundedTile(x, y, zoom)
+			set[tile] = true
 			if ring != nil && y != prevY {
-				ring = append(ring, [2]uint32{uint32(x), uint32(y)})
+				ring = append(ring, [2]uint32{tile.X, tile.Y})
 			}
 			prevX = x
 			prevY = y
@@ -100,18 +101,39 @@ func line(
 				y += sy
 			}
 
-			set[maptile.New(uint32(x), uint32(y), zoom)] = true
+			tile := boundedTile(x, y, zoom)
+			set[tile] = true
 			if ring != nil && y != prevY {
-				ring = append(ring, [2]uint32{uint32(x), uint32(y)})
+				ring = append(ring, [2]uint32{tile.X, tile.Y})
 			}
 			prevX = x
 			prevY = y
 		}
 	}
 
-	if ring != nil && uint32(y) == ring[0][1] {
+	if ring != nil && boundedCoordinate(y, zoom) == ring[0][1] {
 		ring = ring[:len(ring)-1]
 	}
 
 	return ring
+}
+
+func boundedTile(x, y float64, zoom maptile.Zoom) maptile.Tile {
+	return maptile.New(boundedCoordinate(x, zoom), boundedCoordinate(y, zoom), zoom)
+}
+
+func boundedCoordinate(value float64, zoom maptile.Zoom) uint32 {
+	if zoom < maptile.MaxZoom {
+		return uint32(value)
+	}
+
+	max := math.Exp2(float64(zoom)) - 1
+	if math.IsNaN(value) || value < 0 {
+		return 0
+	}
+	if value > max {
+		return uint32(max)
+	}
+
+	return uint32(value)
 }

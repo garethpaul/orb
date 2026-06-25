@@ -127,6 +127,22 @@ func TestCountries(t *testing.T) {
 	}
 }
 
+func TestLineStringAtMaximumZoomEasternBoundary(t *testing.T) {
+	set := LineString(orb.LineString{{179.999999, 0}, {180, 0}}, maptile.MaxZoom)
+
+	if set[maptile.New(0, 1<<31, maptile.MaxZoom)] {
+		t.Fatal("eastern boundary wrapped to the westernmost tile")
+	}
+	if !set[maptile.New(math.MaxUint32, 1<<31, maptile.MaxZoom)] {
+		t.Fatal("eastern boundary tile missing")
+	}
+	for tile := range set {
+		if !tile.Valid() {
+			t.Fatalf("invalid boundary tile: %v", tile)
+		}
+	}
+}
+
 func compareFeatureCollections(t testing.TB, name string, result, expected *geojson.FeatureCollection) {
 	sortFC(result)
 	sortFC(expected)
