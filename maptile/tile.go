@@ -45,22 +45,33 @@ func New(x, y uint32, z Zoom) Tile {
 
 // At creates a tile for the point at the given zoom.
 // Will create a valid tile through MaxZoom. Higher zooms return an invalid tile.
-// Points outside
-// the range lat [-85.0511, 85.0511] will be snapped to the
-// max or min tile as appropriate.
+// Points outside longitude [-180, 180] or latitude [-85.0511, 85.0511]
+// will be snapped to the max or min tile as appropriate.
 func At(ll orb.Point, z Zoom) Tile {
 	if z > MaxZoom {
 		return Tile{Z: z}
 	}
 
 	f := Fraction(ll, z)
+	maxCoordinate := math.Exp2(float64(z)) - 1
 	t := Tile{
-		X: uint32(f[0]),
-		Y: uint32(f[1]),
+		X: boundedCoordinate(f[0], maxCoordinate),
+		Y: boundedCoordinate(f[1], maxCoordinate),
 		Z: z,
 	}
 
 	return t
+}
+
+func boundedCoordinate(value, max float64) uint32 {
+	if math.IsNaN(value) || value < 0 {
+		return 0
+	}
+	if value > max {
+		return uint32(max)
+	}
+
+	return uint32(value)
 }
 
 // FromQuadkey creates the tile from the quadkey.

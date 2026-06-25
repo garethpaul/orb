@@ -88,6 +88,11 @@ func TestAt(t *testing.T) {
 	if center := tile.Center(); math.Abs(center[0]) > mercator.Epsilon || math.Abs(center[1]) > mercator.Epsilon {
 		t.Errorf("zoom 32 center incorrect: %v", center)
 	}
+
+	tile = At(orb.Point{180, 0}, 32)
+	if tile != New(math.MaxUint32, 1<<31, 32) {
+		t.Errorf("zoom 32 eastern boundary incorrect: %v", tile)
+	}
 }
 
 func TestTileQuadkey(t *testing.T) {
