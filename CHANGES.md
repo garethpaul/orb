@@ -9,17 +9,21 @@
   wrapped invalid children, while `Tile.Range` retained wrapped payload
   coordinates for unrepresentable target zooms.
 - Work: made maximum-zoom tiles leaf nodes and above-ceiling ranges return
-  canonical invalid zero-coordinate endpoints.
+  canonical invalid zero-coordinate endpoints; made complete and partial
+  tile-cover merging preserve above-ceiling sets without sibling indexing.
 - Files: changed `maptile/tile.go`, `maptile/tile_test.go`, repository guidance,
   `scripts/check-baseline.py`, and the completed descendant-boundary plan.
 - Validation: RED on Go 1.20.14 showed wrapped maximum-zoom children and
   noncanonical invalid ranges. A first invalid-source guard then broke Fiji
   tile-cover merging and was reverted. Full offline `make check` passes on Go
   1.20.14 and Go 1.25.11, including tests, race, vet, workflow, baseline, and
-  Make authority; four hostile boundary mutations are rejected. Hosted and
-  review evidence remains pending.
+  Make authority. Exact-head review then reproduced an above-ceiling `MergeUp`
+  panic; after guarding both merge variants, the complete two-version gates
+  pass again and six hostile boundary mutations, including removal of either
+  merge guard, are rejected. Hosted and final review evidence remains pending.
 - Findings: `MaxZoom` must bound descendant construction as well as projection;
-  invalidity by zoom alone does not prevent callers from consuming wrapped X/Y.
+  invalidity by zoom alone does not prevent callers from consuming wrapped X/Y,
+  and callers that expect four siblings must reject unrepresentable levels.
 - Blockers: no local Go binary; cached network-isolated Go containers provide
   local validation, with hosted CI required for the repository's exact matrix.
 - Next: run exact-head Codex review and hosted checks; merge only when all

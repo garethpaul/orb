@@ -41,6 +41,26 @@ func TestMergeUp(t *testing.T) {
 	}
 }
 
+func TestMergeUpAboveMaximumZoom(t *testing.T) {
+	tile := maptile.Tile{Z: maptile.MaxZoom + 1}
+
+	for _, merge := range []struct {
+		name string
+		fn   func(maptile.Set) maptile.Set
+	}{
+		{name: "complete", fn: func(set maptile.Set) maptile.Set { return MergeUp(set, 0) }},
+		{name: "partial", fn: func(set maptile.Set) maptile.Set { return MergeUpPartial(set, 0, 4) }},
+	} {
+		t.Run(merge.name, func(t *testing.T) {
+			set := maptile.Set{tile: true}
+			result := merge.fn(set)
+			if len(result) != 1 || !result[tile] {
+				t.Fatalf("above-maximum tile must remain unchanged: %v", result)
+			}
+		})
+	}
+}
+
 func BenchmarkMergeUp_z0z10(b *testing.B) {
 	g := loadFeature(b, "./testdata/russia.geojson").Geometry
 	tiles := Geometry(g, 10)

@@ -69,7 +69,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   protobuf code, or fixture data.
 - Tiles at `maptile.MaxZoom` have no representable children. `Tile.Range`
   returns canonical invalid zero-coordinate endpoints for requested zooms above
-  that ceiling.
+  that ceiling, and tile-cover merge helpers preserve above-ceiling sets
+  unchanged instead of indexing nonexistent siblings.
 - `resample.Resample` rejects an all-zero callback total before interpolation,
   while preserving mixed zero-length and positive callback segments.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go

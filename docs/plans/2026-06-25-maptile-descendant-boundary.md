@@ -21,6 +21,8 @@ target zooms.
 - Preserve valid ranges through `MaxZoom`.
 - Return invalid zero-coordinate endpoints at the requested zoom for targets
   above `MaxZoom`.
+- Preserve above-ceiling tile-cover sets unchanged instead of indexing a
+  nonexistent sibling list.
 - Keep the public API and Go 1.20 compatibility unchanged.
 
 ## Verification
@@ -34,6 +36,12 @@ target zooms.
 - Full offline `make check` passed on Go 1.20.14 and Go 1.25.11, including all
   package tests, race tests, vet, workflow contracts, the static baseline, and
   Make authority tests.
-- Four hostile mutations were rejected: missing and strict child guards,
-  missing range guard, and noncanonical invalid range payload.
+- Exact-head review reproduced a panic when `MergeUp` received a tile above
+  `MaxZoom`; both complete and partial tile-cover merging now return that set
+  unchanged, with a focused regression test.
+- The complete offline `make check` matrix passed again after that review fix
+  on Go 1.20.14 and Go 1.25.11.
+- Six hostile mutations were rejected: missing and strict child guards,
+  missing range guard, noncanonical invalid range payload, and removal of
+  either complete or partial merge guard.
 - Hosted checks and exact-head review remain required before merge.
