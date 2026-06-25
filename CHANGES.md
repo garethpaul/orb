@@ -9,9 +9,11 @@
   to zero, restoring zoom-32 tile validation, point projection, bounds, and
   scalar Mercator round trips; tile coordinates now clamp before conversion so
   the eastern boundary cannot wrap in direct or tile-cover projection, and
-  zooms above the `uint32` coordinate capacity produce invalid `At` tiles.
+  inclusive bound-cover loops terminate before `uint32` wraparound; zooms above
+  the coordinate capacity produce invalid `At` tiles.
 - Files: `maptile/tile.go`, `maptile/tile_test.go`,
   `maptile/tilecover/line_string.go`, `maptile/tilecover/cover_test.go`,
+  `maptile/tilecover/helpers.go`,
   `internal/mercator/mercator.go`, and `internal/mercator/mercator_test.go`.
 - Validation: reproduced four zoom-32 failures on Go 1.20.14, then passed all
   tests, race tests, and vet on Go 1.20.14 and Go 1.25.11 plus static baseline,

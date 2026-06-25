@@ -143,6 +143,25 @@ func TestLineStringAtMaximumZoomEasternBoundary(t *testing.T) {
 	}
 }
 
+func TestBoundAtMaximumZoomBoundaries(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		point orb.Point
+	}{
+		{name: "maximum x", point: orb.Point{180, 0}},
+		{name: "maximum y", point: orb.Point{-180, -90}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			set := Bound(orb.Bound{Min: tc.point, Max: tc.point}, maptile.MaxZoom)
+			expected := maptile.At(tc.point, maptile.MaxZoom)
+
+			if len(set) != 1 || !set[expected] {
+				t.Fatalf("incorrect boundary cover: %v", set)
+			}
+		})
+	}
+}
+
 func compareFeatureCollections(t testing.TB, name string, result, expected *geojson.FeatureCollection) {
 	sortFC(result)
 	sortFC(expected)
