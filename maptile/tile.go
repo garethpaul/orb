@@ -242,7 +242,12 @@ func (t Tile) SharedParent(tile Tile) Tile {
 }
 
 // Children returns the 4 children of the tile.
+// Tiles at MaxZoom and above have no representable children.
 func (t Tile) Children() Tiles {
+	if t.Z >= MaxZoom {
+		return nil
+	}
+
 	return Tiles{
 		Tile{t.X << 1, t.Y << 1, t.Z + 1},
 		Tile{(t.X << 1) + 1, t.Y << 1, t.Z + 1},
@@ -268,8 +273,14 @@ func (t Tile) Quadkey() uint64 {
 }
 
 // Range returns the min and max tile "range" to cover the tile
-// at the given zoom.
+// at the given zoom. Zooms above MaxZoom return invalid zero-coordinate
+// endpoints at the requested zoom.
 func (t Tile) Range(z Zoom) (min, max Tile) {
+	if z > MaxZoom {
+		invalid := Tile{Z: z}
+		return invalid, invalid
+	}
+
 	if z < t.Z {
 		t = t.toZoom(z)
 		return t, t

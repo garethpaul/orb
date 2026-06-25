@@ -22,6 +22,7 @@ NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.
 NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
 NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
 ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
+MAPTILE_DESCENDANT_PLAN = "docs/plans/2026-06-25-maptile-descendant-boundary.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -89,6 +90,7 @@ REQUIRED = [
     NONFINITE_CALLBACK_PLAN,
     NEGATIVE_CALLBACK_SEGMENT_PLAN,
     ZERO_CALLBACK_TOTAL_PLAN,
+    MAPTILE_DESCENDANT_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -354,6 +356,23 @@ def main():
         failures.append("simplify multiPolygon must skip empty polygons before indexing")
     if "TestMultiPolygonSkipsEmptyPolygon" not in simplify_tests:
         failures.append("simplify tests must cover empty polygons inside multipolygons")
+    tile_source = read("maptile/tile.go")
+    tile_tests = read("maptile/tile_test.go")
+    for phrase in [
+        "if t.Z >= MaxZoom",
+        "if z > MaxZoom",
+        "invalid := Tile{Z: z}",
+    ]:
+        if phrase not in tile_source:
+            failures.append(f"maptile descendant boundary must include {phrase}")
+    for phrase in [
+        "maximum zoom tile must not wrap into children",
+        "last representable children must remain valid",
+        "range above maximum zoom must be invalid",
+    ]:
+        if phrase not in tile_tests:
+            failures.append(f"maptile descendant tests must include {phrase}")
+
     planar_contains = read("planar/contains.go")
     planar_contains_tests = read("planar/contains_test.go")
     if "if len(r) == 0" not in planar_contains or "if len(p) == 0" not in planar_contains:
@@ -877,6 +896,28 @@ def main():
             failures.append(
                 f"location-independent Make verification must record {evidence}"
             )
+
+    descendant_plan = read(MAPTILE_DESCENDANT_PLAN)
+    for phrase in [
+        "status: completed",
+        "RED: Go 1.20.14",
+        "go test ./maptile",
+        "MaxZoom",
+        "invalid zero-coordinate endpoints",
+    ]:
+        if phrase not in descendant_plan:
+            failures.append(f"maptile descendant plan must record {phrase}")
+
+    descendant_guidance = {
+        "README.md": "Tiles at `maptile.MaxZoom` have no representable children",
+        "SECURITY.md": "Descendant tile operations must not wrap coordinates beyond `maptile.MaxZoom`",
+        "VISION.md": "Keep descendant tile operations inside the `maptile.MaxZoom` coordinate ceiling",
+        "AGENTS.md": "Tiles at `maptile.MaxZoom` are leaves",
+        "CHANGES.md": "canonical invalid zero-coordinate endpoints",
+    }
+    for path, phrase in descendant_guidance.items():
+        if phrase not in read(path):
+            failures.append(f"{path} must document the maptile descendant boundary")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

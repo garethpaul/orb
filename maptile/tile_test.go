@@ -202,6 +202,18 @@ func TestRange(t *testing.T) {
 	if max != New(19, 11, 7) {
 		t.Errorf("max incorrect: %v", max)
 	}
+
+	min, max = New(1, 1, MaxZoom-1).Range(MaxZoom)
+	if min != New(2, 2, MaxZoom) || max != New(3, 3, MaxZoom) {
+		t.Errorf("maximum representable range incorrect: %v %v", min, max)
+	}
+
+	min, max = New(1, 1, MaxZoom-1).Range(MaxZoom + 1)
+	invalidRange := Tile{Z: MaxZoom + 1}
+	if min != invalidRange || max != invalidRange {
+		t.Errorf("range above maximum zoom must be invalid: %v %v", min, max)
+	}
+
 }
 
 func TestSharedParent(t *testing.T) {
@@ -252,6 +264,17 @@ func TestChildren(t *testing.T) {
 
 	if len(children) != 4 {
 		t.Errorf("should have 4 children: %v", len(children))
+	}
+
+	if children := New(^uint32(0), ^uint32(0), MaxZoom).Children(); len(children) != 0 {
+		t.Errorf("maximum zoom tile must not wrap into children: %v", children)
+	}
+
+	children = New(1, 1, MaxZoom-1).Children()
+	for _, child := range children {
+		if !child.Valid() || child.Z != MaxZoom {
+			t.Errorf("last representable children must remain valid: %v", children)
+		}
 	}
 }
 

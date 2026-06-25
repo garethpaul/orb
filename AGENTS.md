@@ -64,6 +64,8 @@
 - Empty line strings passed to interval resampling must return before invoking caller-provided distance functions.
 - Resampling must reject nil callbacks, non-finite coordinates or distances, non-progressing spacing, and requests above the documented 64 MiB point-allocation budget before output allocation.
 - Polygon distance indices must remain `-1` when no ring contains a segment.
+- Tiles at `maptile.MaxZoom` are leaves; above-ceiling children must not wrap,
+  and above-ceiling descendant ranges use zero-coordinate sentinels.
 - Generated protobuf Go files are present; keep source `.proto`, generated files, and tests in sync.
 
 ## Agent workflow

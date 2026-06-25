@@ -1,5 +1,30 @@
 # Changes
 
+## 2026-06-25T16:12:08-0700 — P1 correctness — cycle: maptile descendant ceiling
+
+- Cycle: inspected the MIT-licensed geometry library, open work, hosted checks,
+  recent zoom-32 repair, tile APIs, tests, plans, and documented follow-up risks.
+- Threads: continued direct maptile boundary hardening; started or stopped none.
+- Bug: `Tile.Children` shifted `uint32` coordinates past `MaxZoom`, producing
+  wrapped invalid children, while `Tile.Range` retained wrapped payload
+  coordinates for unrepresentable target zooms.
+- Work: made maximum-zoom tiles leaf nodes and above-ceiling ranges return
+  canonical invalid zero-coordinate endpoints.
+- Files: changed `maptile/tile.go`, `maptile/tile_test.go`, repository guidance,
+  `scripts/check-baseline.py`, and the completed descendant-boundary plan.
+- Validation: RED on Go 1.20.14 showed wrapped maximum-zoom children and
+  noncanonical invalid ranges. A first invalid-source guard then broke Fiji
+  tile-cover merging and was reverted. Full offline `make check` passes on Go
+  1.20.14 and Go 1.25.11, including tests, race, vet, workflow, baseline, and
+  Make authority; four hostile boundary mutations are rejected. Hosted and
+  review evidence remains pending.
+- Findings: `MaxZoom` must bound descendant construction as well as projection;
+  invalidity by zoom alone does not prevent callers from consuming wrapped X/Y.
+- Blockers: no local Go binary; cached network-isolated Go containers provide
+  local validation, with hosted CI required for the repository's exact matrix.
+- Next: run exact-head Codex review and hosted checks; merge only when all
+  evidence is clean.
+
 ## 2026-06-25T20:30:44Z — P1 correctness — cycle: maptile zoom boundary
 
 - Threads: inspected the default branch, recent pull requests, hosted checks,
