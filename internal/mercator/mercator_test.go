@@ -17,6 +17,12 @@ func TestScalarMercator(t *testing.T) {
 		t.Errorf("Scalar Mercator, longitude should be 0: %f", lng)
 	}
 
+	x, y = ToPlanar(0, 0, 32)
+	lng, lat = ToGeo(x, y, 32)
+	if x != 1<<31 || y != 1<<31 || lng != 0 || lat != 0 {
+		t.Errorf("Scalar Mercator, zoom 32 round trip incorrect: %f %f %f %f", x, y, lng, lat)
+	}
+
 	// specific case
 	if x, y := ToPlanar(-87.65005229999997, 41.850033, 20); math.Floor(x) != 268988 || math.Floor(y) != 389836 {
 		t.Errorf("Scalar Mercator, projection incorrect, got %v %v", x, y)

@@ -62,11 +62,21 @@ func Bound(b orb.Bound, z maptile.Zoom) maptile.Set {
 	lo := maptile.At(b.Min, z)
 	hi := maptile.At(b.Max, z)
 
+	if lo.X > hi.X || hi.Y > lo.Y {
+		return make(maptile.Set)
+	}
+
 	result := make(maptile.Set, (hi.X-lo.X+1)*(lo.Y-hi.Y+1))
 
-	for x := lo.X; x <= hi.X; x++ {
-		for y := hi.Y; y <= lo.Y; y++ {
+	for x := lo.X; ; x++ {
+		for y := hi.Y; ; y++ {
 			result[maptile.Tile{X: x, Y: y, Z: z}] = true
+			if y == lo.Y {
+				break
+			}
+		}
+		if x == hi.X {
+			break
 		}
 	}
 
