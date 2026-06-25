@@ -14,6 +14,9 @@ func MergeUp(set maptile.Set, min maptile.Zoom) maptile.Set {
 			break
 		}
 	}
+	if max > maptile.MaxZoom {
+		return set
+	}
 
 	if min == max {
 		return set
@@ -87,6 +90,9 @@ func MergeUpPartial(set maptile.Set, min maptile.Zoom, count int) maptile.Set {
 			max = t.Z
 			break
 		}
+	}
+	if max > maptile.MaxZoom {
+		return set
 	}
 
 	if min == max {

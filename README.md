@@ -30,6 +30,8 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `scripts/check-baseline.py` - static baseline checks used by `make check`
 - `SECURITY.md` - security reporting and disclosure guidance
 - `docs/plans/2026-06-08-orb-go-module-baseline.md` - completed module hardening plan
+- `docs/plans/2026-06-25-maptile-descendant-boundary.md` - representable tile
+  descendant boundary and overflow regression coverage
 
 Additional scan context:
 
@@ -65,6 +67,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   READMEs under `geo`, `geojson`, `encoding`, `clip`, and `maptile`.
 - Run `make check` before changing geometry algorithms, encoders, generated
   protobuf code, or fixture data.
+- Tiles at `maptile.MaxZoom` have no representable children. `Tile.Range`
+  returns canonical invalid zero-coordinate endpoints for requested zooms above
+  that ceiling, and tile-cover merge helpers preserve above-ceiling sets
+  unchanged instead of indexing nonexistent siblings.
 - `resample.Resample` rejects an all-zero callback total before interpolation,
   while preserving mixed zero-length and positive callback segments.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go

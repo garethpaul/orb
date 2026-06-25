@@ -80,6 +80,10 @@ Negative callback segment distances should fail closed before accumulation so
 later positive segments cannot mask invalid cumulative geometry.
 A zero callback total should fail closed before `Resample` interpolation so a
 malformed distance callback cannot prevent forward progress.
+Descendant tile operations must not wrap coordinates beyond `maptile.MaxZoom`;
+maximum-zoom tiles have no children, and above-ceiling ranges use a canonical
+zero-coordinate sentinel. Tile-cover merge helpers preserve above-ceiling sets
+without traversing nonexistent siblings.
 Nil callbacks, non-finite coordinates, underflowing sample spacing, and point
 requests above the 64 MiB resampling output budget should fail closed before
 allocation or interpolation.
