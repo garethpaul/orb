@@ -38,6 +38,8 @@ type Zoom uint32
 // MaxZoom is the highest zoom whose complete tile coordinate range fits in uint32.
 const MaxZoom Zoom = 32
 
+const maxFiniteZoom Zoom = 1023
+
 // New creates a new tile with the given coordinates.
 func New(x, y uint32, z Zoom) Tile {
 	return Tile{x, y, z}
@@ -165,14 +167,18 @@ func (t Tile) Parent() Tile {
 }
 
 // Fraction returns the precise tile fraction at the given zoom.
-// Will return 2^zoom-1 if the point is below 85.0511 S.
+// Zooms above 1023 use 1023 as the effective zoom.
+// Will return 2^effectiveZoom-1 if the point is below 85.0511 S.
 func Fraction(ll orb.Point, z Zoom) orb.Point {
 	var p orb.Point
 
+	if z > maxFiniteZoom {
+		z = maxFiniteZoom
+	}
 	maxtiles := math.Exp2(float64(z))
 
 	lng := ll[0]/360.0 + 0.5
-	p[0] = lng * maxtiles
+	p[0] = finiteProduct(lng, maxtiles)
 
 	// bound it because we have a top of the world problem
 	if ll[1] < -85.0511 {
@@ -186,6 +192,15 @@ func Fraction(ll orb.Point, z Zoom) orb.Point {
 	}
 
 	return p
+}
+
+func finiteProduct(value, scale float64) float64 {
+	product := value * scale
+	if math.IsInf(product, 0) {
+		return math.Copysign(math.MaxFloat64, product)
+	}
+
+	return product
 }
 
 // SharedParent returns the tile that contains both the tiles.

@@ -91,6 +91,8 @@ without traversing nonexistent siblings.
 Mercator scale exponents must remain finite, and power-of-two MVT projection
 must not narrow high-zoom tile origins through `uint32` shifts. Zero MVT extents
 must use the default extent before projection.
+Direct tile fractions must remain finite at excessive zooms, and line or polygon
+tile-cover traversal must stop before unrepresentable zooms can consume CPU.
 Nil callbacks, non-finite coordinates, underflowing sample spacing, and point
 requests above the 64 MiB resampling output budget should fail closed before
 allocation or interpolation.

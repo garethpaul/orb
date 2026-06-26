@@ -1,5 +1,20 @@
 # Changes
 
+## 2026-06-25T19:15:00-0700 — P1 reliability — maptile fraction boundary
+
+- Bug: `maptile.Fraction` overflowed to non-finite coordinates at zoom 1024 and
+  above, while line and polygon tile covers could traverse unrepresentable zooms
+  directly and consume unbounded CPU.
+- Work: preserved fraction scales through zoom 1023, saturated larger exponents,
+  saturated overflowing finite longitude products, and made every tile-cover
+  entry point return empty above `maptile.MaxZoom` before dispatch or iteration.
+- Validation: RED on Go 1.20.14 reproduced infinities and NaNs; focused fraction
+  and excessive-cover regressions pass. Full `make check` and `go mod verify`
+  pass on Go 1.20.14 and Go 1.25.11; seven meaningful hostile mutations are
+  rejected. Three independent reviewers approve after findings were resolved;
+  the required Codex review was attempted at `3ec9017` and skipped after HTTP
+  401 authentication failure. Hosted evidence follows.
+
 ## 2026-06-25T19:16:00-0700 — P1 correctness — reject invalid MVT geometry components
 
 ### Summary

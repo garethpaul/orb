@@ -13,6 +13,9 @@ func Geometry(g orb.Geometry, z maptile.Zoom) maptile.Set {
 	if g == nil {
 		return nil
 	}
+	if z > maptile.MaxZoom {
+		return make(maptile.Set)
+	}
 
 	switch g := g.(type) {
 	case orb.Point:
@@ -41,6 +44,10 @@ func Geometry(g orb.Geometry, z maptile.Zoom) maptile.Set {
 // Point creates a tile cover for the point, i.e. just the tile
 // containing the point.
 func Point(ll orb.Point, z maptile.Zoom) maptile.Set {
+	if z > maptile.MaxZoom {
+		return make(maptile.Set)
+	}
+
 	return maptile.Set{
 		maptile.At(ll, z): true,
 	}
@@ -49,6 +56,9 @@ func Point(ll orb.Point, z maptile.Zoom) maptile.Set {
 // MultiPoint creates a tile cover for the set of points,
 func MultiPoint(mp orb.MultiPoint, z maptile.Zoom) maptile.Set {
 	set := make(maptile.Set)
+	if z > maptile.MaxZoom {
+		return set
+	}
 	for _, p := range mp {
 		set[maptile.At(p, z)] = true
 	}
@@ -59,6 +69,10 @@ func MultiPoint(mp orb.MultiPoint, z maptile.Zoom) maptile.Set {
 // Bound creates a tile cover for the bound. i.e. all the tiles
 // that intersect the bound.
 func Bound(b orb.Bound, z maptile.Zoom) maptile.Set {
+	if z > maptile.MaxZoom {
+		return make(maptile.Set)
+	}
+
 	lo := maptile.At(b.Min, z)
 	hi := maptile.At(b.Max, z)
 
@@ -87,6 +101,9 @@ func Bound(b orb.Bound, z maptile.Zoom) maptile.Set {
 // geoemtry collection.
 func Collection(c orb.Collection, z maptile.Zoom) maptile.Set {
 	set := make(maptile.Set)
+	if z > maptile.MaxZoom {
+		return set
+	}
 	for _, g := range c {
 		set.Merge(Geometry(g, z))
 	}

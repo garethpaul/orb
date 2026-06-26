@@ -44,6 +44,7 @@ Priority:
 - Keep empty interval resampling safe before distance precomputation
 - Keep descendant tile operations inside the `maptile.MaxZoom` coordinate ceiling
 - Keep Mercator scales finite and high-zoom MVT origins free of integer wraparound
+- Keep direct tile fractions finite and unrepresentable tile covers fail-closed
 - Keep above-ceiling tile-cover sets stable instead of traversing nonexistent siblings
 - Keep non-finite interval distances out of resampling calculations and
   caller-provided distance callbacks
