@@ -102,7 +102,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Smart clipping rejects polygons with empty outer rings and ignores empty
   inner rings or child polygons instead of indexing malformed geometry.
 - MVT marshaling returns contextual errors for nil, empty, or too-short geometry
-  components instead of panicking or emitting invalid command counts.
+  components and encoded zero-length line or ring segments instead of panicking
+  or emitting invalid command sequences.
 - `MultiPolygon.Bound` keeps leading empty polygons from leaking empty-bound
   sentinels into aggregate bounds.
 - Empty interval resampling returns empty line strings before distance

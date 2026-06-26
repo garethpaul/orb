@@ -113,6 +113,78 @@ func TestMarshalRejectsInvalidGeometryComponents(t *testing.T) {
 	}
 }
 
+func TestMarshalRejectsDegenerateEncodedSegments(t *testing.T) {
+	tests := []struct {
+		name     string
+		geometry orb.Geometry
+	}{
+		{name: "duplicate line vertex", geometry: orb.LineString{{1, 1}, {1, 1}}},
+		{name: "quantized line vertex", geometry: orb.LineString{{1.1, 1.1}, {1.9, 1.9}}},
+		{name: "duplicate multiline vertex", geometry: orb.MultiLineString{{{1, 1}, {1, 1}}}},
+		{name: "duplicate ring vertex", geometry: orb.Ring{{0, 0}, {2, 0}, {2, 0}}},
+		{name: "closed ring with two encoded vertices", geometry: orb.Ring{{0, 0}, {2, 0}, {0, 0}}},
+		{name: "duplicate polygon vertex", geometry: orb.Polygon{{{0, 0}, {2, 0}, {2, 0}}}},
+		{name: "quantized multipolygon vertex", geometry: orb.MultiPolygon{{{{0, 0}, {2.1, 0.1}, {2.9, 0.9}}}}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			collection := geojson.NewFeatureCollection()
+			collection.Append(geojson.NewFeature(test.geometry))
+			_, err := Marshal(Layers{NewLayer("degenerate", collection)})
+			if err == nil {
+				t.Errorf("Marshal should reject degenerate %s", test.name)
+			} else if !strings.Contains(err.Error(), "layer degenerate: feature 0: error encoding geometry") {
+				t.Errorf("Marshal returned uncontextualized error for degenerate %s: %v", test.name, err)
+			}
+		})
+	}
+}
+
+func TestMarshalAllowsRepeatedMultiPoints(t *testing.T) {
+	collection := geojson.NewFeatureCollection()
+	collection.Append(geojson.NewFeature(orb.MultiPoint{{1, 1}, {1, 1}}))
+	if _, err := Marshal(Layers{NewLayer("points", collection)}); err != nil {
+		t.Fatalf("Marshal rejected repeated multipoints: %v", err)
+	}
+}
+
+func TestMarshalNormalizesRedundantEncodedVertices(t *testing.T) {
+	tests := []struct {
+		name     string
+		geometry orb.Geometry
+		encoded  []uint32
+	}{
+		{
+			name:     "line",
+			geometry: orb.LineString{{0, 0}, {0.9, 0.9}, {2, 2}},
+			encoded:  []uint32{9, 0, 0, 10, 4, 4},
+		},
+		{
+			name:     "ring close",
+			geometry: orb.Ring{{0.1, 0.1}, {2, 0}, {1, 1}, {0.9, 0.9}},
+			encoded:  []uint32{9, 0, 0, 18, 4, 0, 1, 2, 15},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			collection := geojson.NewFeatureCollection()
+			collection.Append(geojson.NewFeature(test.geometry))
+			if _, err := Marshal(Layers{NewLayer("normalized", collection)}); err != nil {
+				t.Fatalf("Marshal rejected normalizable %s geometry: %v", test.name, err)
+			}
+			_, encoded, err := encodeGeometry(test.geometry)
+			if err != nil {
+				t.Fatalf("encodeGeometry rejected normalizable %s geometry: %v", test.name, err)
+			}
+			if !reflect.DeepEqual(encoded, test.encoded) {
+				t.Errorf("encoded %s geometry = %v, want %v", test.name, encoded, test.encoded)
+			}
+		})
+	}
+}
+
 func TestMarshalUnmarshal(t *testing.T) {
 	cases := []struct {
 		name string
@@ -130,12 +202,17 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			expected := loadGeoJSON(t, tc.tile)
+			expectedLayers := NewLayers(loadGeoJSON(t, tc.tile))
+			expectedLayers.ProjectToTile(tc.tile)
+			expectedLayers.RemoveEmpty(1.0, 1.0)
+			expectedLayers.ProjectToWGS84(tc.tile)
+			expected := expectedLayers.ToFeatureCollections()
 			layers := NewLayers(loadGeoJSON(t, tc.tile))
 			layers.ProjectToTile(tc.tile)
+			layers.RemoveEmpty(1.0, 1.0)
 			data, err := Marshal(layers)
 			if err != nil {
-				t.Errorf("marshal error: %v", err)
+				t.Fatalf("marshal error: %v", err)
 			}
 
 			layers, err = Unmarshal(data)

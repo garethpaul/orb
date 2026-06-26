@@ -33,53 +33,66 @@ func encodeGeometry(g orb.Geometry) (vectortile.Tile_GeomType, []uint32, error) 
 
 		return vectortile.Tile_POINT, e.Data, nil
 	case orb.LineString:
-		e := newGeomEncoder(2 + 2*len(g))
-		e.MoveTo([]orb.Point{g[0]})
-		e.LineTo([]orb.Point(g[1:]))
+		lineString, err := normalizeLineStringForEncoding(g)
+		if err != nil {
+			return 0, nil, err
+		}
+		e := newGeomEncoder(2 + 2*len(lineString))
+		e.MoveTo([]orb.Point{lineString[0]})
+		e.LineTo([]orb.Point(lineString[1:]))
 
 		return vectortile.Tile_LINESTRING, e.Data, nil
 	case orb.MultiLineString:
 		e := newGeomEncoder(elMLS(g))
-		for _, ls := range g {
-			e.MoveTo([]orb.Point{ls[0]})
-			e.LineTo([]orb.Point(ls[1:]))
+		for i, lineString := range g {
+			lineString, err := normalizeLineStringForEncoding(lineString)
+			if err != nil {
+				return 0, nil, errors.Wrapf(err, "multi line string child %d", i)
+			}
+			e.MoveTo([]orb.Point{lineString[0]})
+			e.LineTo([]orb.Point(lineString[1:]))
 		}
 
 		return vectortile.Tile_LINESTRING, e.Data, nil
 	case orb.Ring:
-		e := newGeomEncoder(3 + 2*len(g))
-		e.MoveTo([]orb.Point{g[0]})
-		if g.Closed() {
-			e.LineTo([]orb.Point(g[1 : len(g)-1]))
-		} else {
-			e.LineTo([]orb.Point(g[1:]))
+		ring, err := normalizeRingForEncoding(g)
+		if err != nil {
+			return 0, nil, err
 		}
+		e := newGeomEncoder(3 + 2*len(ring))
+		e.MoveTo([]orb.Point{ring[0]})
+		e.LineTo([]orb.Point(ring[1:]))
 		e.ClosePath()
 
 		return vectortile.Tile_POLYGON, e.Data, nil
 	case orb.Polygon:
 		e := newGeomEncoder(elP(g))
-		for _, r := range g {
-			e.MoveTo([]orb.Point{r[0]})
-			if r.Closed() {
-				e.LineTo([]orb.Point(r[1 : len(r)-1]))
-			} else {
-				e.LineTo([]orb.Point(r[1:]))
+		for i, ring := range g {
+			ring, err := normalizeRingForEncoding(ring)
+			if err != nil {
+				return 0, nil, errors.Wrapf(err, "polygon ring %d", i)
 			}
+			e.MoveTo([]orb.Point{ring[0]})
+			e.LineTo([]orb.Point(ring[1:]))
 			e.ClosePath()
 		}
 
 		return vectortile.Tile_POLYGON, e.Data, nil
 	case orb.MultiPolygon:
 		e := newGeomEncoder(elMP(g))
-		for _, p := range g {
-			for _, r := range p {
-				e.MoveTo([]orb.Point{r[0]})
-				if r.Closed() {
-					e.LineTo([]orb.Point(r[1 : len(r)-1]))
-				} else {
-					e.LineTo([]orb.Point(r[1:]))
+		for polygonIndex, polygon := range g {
+			for ringIndex, ring := range polygon {
+				ring, err := normalizeRingForEncoding(ring)
+				if err != nil {
+					return 0, nil, errors.Wrapf(
+						err,
+						"multi polygon child %d ring %d",
+						polygonIndex,
+						ringIndex,
+					)
 				}
+				e.MoveTo([]orb.Point{ring[0]})
+				e.LineTo([]orb.Point(ring[1:]))
 				e.ClosePath()
 			}
 		}
@@ -151,6 +164,53 @@ func validateGeometryForEncoding(g orb.Geometry) error {
 	}
 
 	return nil
+}
+
+func normalizeLineStringForEncoding(lineString orb.LineString) (orb.LineString, error) {
+	normalized := orb.LineString(normalizeEncodedPoints(lineString))
+	if len(normalized) < 2 {
+		return nil, errors.New("line string must contain at least two encoded vertices")
+	}
+
+	return normalized, nil
+}
+
+func normalizeRingForEncoding(ring orb.Ring) (orb.Ring, error) {
+	normalized := orb.Ring(normalizeEncodedPoints(ring))
+	if len(normalized) > 1 && encodedPointsEqual(normalized[len(normalized)-1], normalized[0]) {
+		normalized = normalized[:len(normalized)-1]
+	}
+	if len(normalized) < 3 {
+		return nil, errors.New("ring must contain at least three encoded vertices")
+	}
+
+	return normalized, nil
+}
+
+func normalizeEncodedPoints(points []orb.Point) []orb.Point {
+	var normalized []orb.Point
+	previous := points[0]
+	for i := 1; i < len(points); i++ {
+		if encodedPointsEqual(previous, points[i]) {
+			if normalized == nil {
+				normalized = append(make([]orb.Point, 0, len(points)), points[:i]...)
+			}
+			continue
+		}
+		if normalized != nil {
+			normalized = append(normalized, points[i])
+		}
+		previous = points[i]
+	}
+	if normalized == nil {
+		return points
+	}
+
+	return normalized
+}
+
+func encodedPointsEqual(a, b orb.Point) bool {
+	return int32(a[0]) == int32(b[0]) && int32(a[1]) == int32(b[1])
 }
 
 type geomEncoder struct {
