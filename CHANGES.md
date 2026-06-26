@@ -1,5 +1,57 @@
 # Changes
 
+## 2026-06-26T01:24:07-0700 — P2 tests — make degenerate resampling contracts explicit
+
+### Summary
+
+Added focused public fixtures for empty, single-point, and zero-length
+resampling without changing production behavior.
+
+### Work completed
+
+- Proved both public entry points short-circuit empty and single-point lines
+  before invoking caller distance functions.
+- Proved `Resample` expands repeated identical points to the requested count.
+- Proved `ToInterval` collapses repeated identical points to one point.
+- Added a completed plan, synchronized guidance, and static fixture contracts.
+
+### Threads
+
+- None; repository behavior, roadmap, history, and existing tests were reviewed
+  directly.
+
+### Files changed
+
+- `resample/line_string_test.go` — focused public degenerate fixtures.
+- `scripts/check-baseline.py` — durable fixture, plan, and guidance contracts.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — public and
+  maintainer guidance.
+- `docs/plans/2026-06-26-resample-degenerate-public-fixtures.md` — completed
+  decision and evidence record.
+- `CHANGES.md` — this cycle record.
+
+### Validation
+
+- RED static verification — rejected all missing fixture names and assertions.
+- Focused `go test ./resample`, full `make check`, and `go mod verify` on Go
+  1.20.14 and Go 1.25.11 — passed in pinned Docker toolchains because the host
+  has no Go executable installed.
+- Fourteen isolated hostile mutations — all rejected.
+- `git diff --check` — passed.
+
+### Bugs / findings
+
+- P2 test gap: empty, single-point, and zero-length resampling behavior was not
+  expressed as focused public output contracts for both entry points.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Complete exact-head review, hosted CI, and merge.
+
 ## 2026-06-26T00:04:55-0700 — P1 correctness — compact simplified collections
 
 ### Summary

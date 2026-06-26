@@ -78,6 +78,9 @@ Collection simplification should remove nil and collapsed children so callers
 do not receive stale nil geometry slots after validating the simplified result.
 Empty interval resampling should return before allocating segment distances or
 calling caller-provided distance functions.
+Empty, single-point, and zero-length resampling should retain public regression
+fixtures so short malformed or degenerate inputs cannot silently regain callback
+or interpolation hazards.
 Non-finite interval distances should be rejected before distance callbacks or
 point-count conversion so malformed numeric input cannot trigger a panic or
 unexpected allocation.
