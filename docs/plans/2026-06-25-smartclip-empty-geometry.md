@@ -33,5 +33,7 @@ valid sibling polygons could be clipped.
 - Full `make check` passes on Go 1.20.14 and Go 1.25.11, including tests,
   race detection, vet, workflow contracts, the static baseline, and Make-root
   isolation tests.
+- The Codex review helper targeted `origin/master` but was skipped after the
+  configured service returned repeated HTTP 401 authentication failures.
 - The static baseline requires the normalization boundary, focused regressions,
   this completed plan, and synchronized public safety documentation.

@@ -38,6 +38,10 @@ empty polygon children.
 - `go test ./clip/smartclip -count=1` on Go 1.20.14 — passed.
 - `make check` on Go 1.20.14 — passed tests, race, vet, workflow, static, and root gates.
 - `make check` on Go 1.25.11 — passed tests, race, vet, workflow, static, and root gates.
+- Codex review helper against `origin/master` — skipped after repeated HTTP 401
+  authentication failures; no review finding was produced.
+- Hosted test lanes on Go 1.20.14, Go 1.25.3, and Go 1.25.11 — passed before
+  this documentation-only evidence update.
 
 ### Bugs / findings
 
@@ -46,11 +50,12 @@ empty polygon children.
 
 ### Blockers
 
-- None.
+- Codex review authentication is unavailable in this environment; skipped per
+  the maintenance policy. This does not block hosted checks or merge.
 
 ### Next action
 
-- Open a focused pull request, run Codex review and hosted checks, and merge only if clean.
+- Merge the focused pull request after this documentation-only update passes hosted checks.
 
 ## 2026-06-25T18:01:05-0700 — P1 correctness — cycle: tile-cover minimum boundary
 
