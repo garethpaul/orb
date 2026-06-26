@@ -1,5 +1,77 @@
 # Changes
 
+## 2026-06-25T19:29:00-0700 — P1 correctness — reject degenerate MVT segments
+
+### Summary
+
+Hardened public MVT marshaling against line and ring vertices that become the
+same encoded integer coordinate and would emit forbidden zero-length segments.
+
+### Work completed
+
+- Added public `Marshal` regressions for exact duplicates, floating-point
+  coordinates that quantize to the same integer, and too-short explicitly
+  closed rings.
+- Preserved repeated multipoints because the MVT zero-delta prohibition applies
+  to `LineTo`, not `MoveTo`.
+- Normalized redundant integer coordinates used by command encoding at every
+  top-level and nested line and ring boundary, while rejecting geometries that
+  collapse below valid command counts.
+- Kept unchanged line and ring encoding zero-copy; normalization allocates only
+  after the first redundant encoded vertex is found.
+- Required at least three encoded ring vertices after omitting an explicit
+  closing coordinate.
+- Added design, implementation, static, and public guidance contracts.
+
+### Threads
+
+- Started: none.
+- Continued: specification-driven MVT malformed-input hardening after PR #22.
+- Stopped: none.
+
+### Files changed
+
+- `encoding/mvt/geometry.go` — validates encoded line and ring segments.
+- `encoding/mvt/marshal_test.go` — covers public degenerate-segment behavior.
+- `scripts/check-baseline.py` — preserves source, tests, plans, and guidance.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — document the MVT
+  zero-length segment contract.
+- `docs/plans/2026-06-25-mvt-zero-delta-design.md` and
+  `docs/plans/2026-06-25-mvt-zero-delta.md` — record the decision and execution.
+
+### Validation
+
+- Focused RED on Go 1.20.14 — all eight degenerate public cases were accepted.
+- Focused GREEN on Go 1.20.14 — all rejection cases and repeated-multipoint
+  compatibility passed.
+- Existing MVT round-trip fixtures exposed projected redundant and fully
+  collapsed lines; redundant vertices are now normalized, while the documented
+  `RemoveEmpty` pipeline removes unrepresentable collapsed features.
+- Focused and full `encoding/mvt` tests — passed on Go 1.20.14 and Go 1.25.11.
+- Full `make check` and `go mod verify` — passed in pinned Go 1.20.14 and Go
+  1.25.11 containers, including all packages, race tests, vet, workflow/static
+  contracts, and Make-root isolation.
+- Twelve isolated hostile mutations — rejected integer/source equality swaps,
+  normalization bypasses, stale cursor state, weak collapse minimums, preserved
+  encoded closure, and every top-level or nested encoder bypass.
+- `git diff --check` — passed.
+
+### Bugs / findings
+
+- P1: duplicate or quantized line and ring vertices could emit a `LineTo` delta
+  of `(0, 0)`, which the MVT 2.1 specification forbids.
+- P1: an explicitly closed three-point ring emitted only one `LineTo` command,
+  below the required polygon-ring count.
+
+### Blockers
+
+- The host has no Go binary; pinned official Docker images provide local Go
+  1.20.14 and Go 1.25.11 validation.
+
+### Next action
+
+- Open the focused PR and run the exact-head review and hosted validation gates.
+
 ## 2026-06-25T19:16:00-0700 — P1 correctness — reject invalid MVT geometry components
 
 ### Summary

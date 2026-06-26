@@ -27,6 +27,8 @@ SMARTCLIP_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-smartclip-empty-geometry.
 MERCATOR_SCALE_PLAN = "docs/plans/2026-06-25-mercator-projection-scale-boundary.md"
 MVT_EMPTY_GEOMETRY_DESIGN = "docs/plans/2026-06-25-mvt-empty-geometry-marshal-design.md"
 MVT_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-mvt-empty-geometry-marshal.md"
+MVT_ZERO_DELTA_DESIGN = "docs/plans/2026-06-25-mvt-zero-delta-design.md"
+MVT_ZERO_DELTA_PLAN = "docs/plans/2026-06-25-mvt-zero-delta.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -98,6 +100,8 @@ REQUIRED = [
     SMARTCLIP_EMPTY_GEOMETRY_PLAN,
     MVT_EMPTY_GEOMETRY_DESIGN,
     MVT_EMPTY_GEOMETRY_PLAN,
+    MVT_ZERO_DELTA_DESIGN,
+    MVT_ZERO_DELTA_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -239,6 +243,16 @@ def main():
         if phrase not in mvt_geometry:
             failures.append(f"MVT geometry encoding must reject invalid components with {phrase}")
     for phrase in [
+        "normalizeLineStringForEncoding",
+        "normalizeRingForEncoding",
+        "normalizeEncodedPoints",
+        "encodedPointsEqual",
+        "line string must contain at least two encoded vertices",
+        "ring must contain at least three encoded vertices",
+    ]:
+        if phrase not in mvt_geometry:
+            failures.append(f"MVT geometry encoding must reject degenerate segments with {phrase}")
+    for phrase in [
         "TestMarshalRejectsInvalidGeometryComponents",
         'name: "nil geometry"',
         'name: "one-point multiline child"',
@@ -247,6 +261,17 @@ def main():
     ]:
         if phrase not in mvt_marshal_tests:
             failures.append(f"MVT marshal tests must preserve {phrase}")
+    for phrase in [
+        "TestMarshalRejectsDegenerateEncodedSegments",
+        'name: "quantized line vertex"',
+        'name: "closed ring with two encoded vertices"',
+        "TestMarshalAllowsRepeatedMultiPoints",
+        "TestMarshalNormalizesRedundantEncodedVertices",
+        "RemoveEmpty(1.0, 1.0)",
+        "layer degenerate: feature 0: error encoding geometry",
+    ]:
+        if phrase not in mvt_marshal_tests:
+            failures.append(f"MVT marshal tests must preserve degenerate-segment boundary {phrase}")
 
     mvt_empty_design = read(MVT_EMPTY_GEOMETRY_DESIGN)
     mvt_empty_plan = read(MVT_EMPTY_GEOMETRY_PLAN)
@@ -261,6 +286,23 @@ def main():
     ]:
         if phrase not in mvt_empty_plan:
             failures.append(f"MVT invalid-geometry implementation plan must preserve {phrase}")
+    mvt_zero_delta_design = read(MVT_ZERO_DELTA_DESIGN)
+    mvt_zero_delta_plan = read(MVT_ZERO_DELTA_PLAN)
+    for phrase in [
+        "## Status: Accepted",
+        "LineTo(0, 0)",
+        "quantize to the same integer",
+        "Normalize redundant encoded vertices, then reject collapsed geometry",
+    ]:
+        if phrase not in mvt_zero_delta_design:
+            failures.append(f"MVT degenerate-segment design must document {phrase}")
+    for phrase in [
+        "## Status: In Progress",
+        "Compare coordinates after the encoder's `int32` conversion",
+        "Reject lines and rings that collapse below their command-count minimums",
+    ]:
+        if phrase not in mvt_zero_delta_plan:
+            failures.append(f"MVT degenerate-segment implementation plan must preserve {phrase}")
     bound = read("bound.go")
     bound_tests = read("bound_test.go")
     multi_line_tests = read("multi_line_string_test.go")
