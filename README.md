@@ -103,6 +103,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Simplification skips empty polygons inside multipolygons without panicking.
   Polygon simplification drops a polygon when its exterior ring collapses
   below polygon validity instead of returning a two-point exterior.
+- Collection simplification removes nil and collapsed children in place; a
+  fully collapsed collection simplifies to nil instead of retaining nil slots.
 - Smart clipping rejects polygons with empty outer rings and ignores empty
   inner rings or child polygons instead of indexing malformed geometry.
 - Collection clipping recursively drops empty and outside children, then

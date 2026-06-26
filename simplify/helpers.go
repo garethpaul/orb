@@ -110,10 +110,17 @@ func multiPolygon(s simplifier, mp orb.MultiPolygon) orb.MultiPolygon {
 }
 
 func collection(s simplifier, c orb.Collection) orb.Collection {
+	count := 0
 	for i := range c {
-		c[i] = simplify(s, c[i])
+		g := simplify(s, c[i])
+		if g == nil {
+			continue
+		}
+
+		c[count] = g
+		count++
 	}
-	return c
+	return c[:count]
 }
 
 func runSimplify(s simplifier, ls orb.LineString) orb.LineString {

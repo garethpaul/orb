@@ -63,6 +63,8 @@
 - Empty line strings should remain safe for helper methods such as reverse.
 - Polygon simplification must drop a polygon when its exterior ring collapses
   below the minimum usable boundary instead of returning a degenerate polygon.
+- Collection simplification must compact nil and collapsed children, returning
+  an empty collection when no simplified geometry survives.
 - Nil geometries inside collections should be ignored by aggregate helpers.
 - Empty bounds should remain identity values in bound union helpers.
 - Empty line strings passed to interval resampling must return before invoking caller-provided distance functions.

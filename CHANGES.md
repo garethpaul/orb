@@ -1,5 +1,59 @@
 # Changes
 
+## 2026-06-26T00:04:55-0700 — P1 correctness — compact simplified collections
+
+### Summary
+
+Removed stale nil slots from simplified geometry collections and made fully
+collapsed collections resolve to nil through the generic API.
+
+### Work completed
+
+- Reproduced a mixed collection returning `[<nil> <nil> [5 6]]` after its
+  polygon child collapsed.
+- Reproduced an all-collapsed collection remaining non-empty with nil children.
+- Compacted surviving collection geometries in place while preserving order.
+- Added direct regressions, maintainer guidance, a completed plan, and static
+  source/test contracts.
+
+### Threads
+
+- None; repository behavior, history, open issues/PRs, and upstream source were
+  reviewed directly.
+
+### Files changed
+
+- `simplify/helpers.go` — in-place collection compaction.
+- `simplify/helpers_test.go` — mixed and fully collapsed regressions.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — result contract.
+- `docs/plans/2026-06-26-simplify-collection-compaction.md` — decision record.
+- `scripts/check-baseline.py` — durable source, test, and plan contracts.
+- `CHANGES.md` — this cycle record.
+
+### Validation
+
+- RED `go test ./simplify` on Go 1.20.14 — both regressions failed with stale
+  nil children.
+- GREEN focused package tests on Go 1.20.14 and Go 1.25.11 — passed.
+- Full `make check` and `go mod verify` on Go 1.20.14 and Go 1.25.11 — passed,
+  including all packages, Linux/386 WKB tests, race tests, vet,
+  workflow/static contracts, and Make-root isolation.
+- Ten hostile source, regression, plan, and guidance mutations — all rejected.
+- `git diff --check` — passed.
+
+### Bugs / findings
+
+- P1 correctness: collection simplification could return non-empty public
+  results containing only nil geometries.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Complete exact-head review, hosted CI, and merge.
+
 ## 2026-06-26T00:00:06-0700 — P2 coverage — cover nested collection clipping
 
 ### Summary
