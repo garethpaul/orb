@@ -358,7 +358,6 @@ def main():
         failures.append("simplify tests must cover empty polygons inside multipolygons")
     tile_source = read("maptile/tile.go")
     tile_tests = read("maptile/tile_test.go")
-    tile_merge = read("maptile/tilecover/merge.go")
     tile_merge_tests = read("maptile/tilecover/merge_test.go")
     for phrase in [
         "if t.Z >= MaxZoom",
@@ -374,11 +373,13 @@ def main():
     ]:
         if phrase not in tile_tests:
             failures.append(f"maptile descendant tests must include {phrase}")
-    if tile_merge.count("if max > maptile.MaxZoom") != 2:
-        failures.append("both tile-cover merge variants must guard above-maximum zooms")
     for phrase in [
         "TestMergeUpAboveMaximumZoom",
         "above-maximum tile must remain unchanged",
+        "TestMergeUpPreservesSetWhenMinimumExceedsInputZoom",
+        "minimum above input zoom must preserve the tile",
+        "TestMergeUpPreservesNonuniformZoomSets",
+        "nonuniform zoom set must remain unchanged",
     ]:
         if phrase not in tile_merge_tests:
             failures.append(f"tile-cover merge tests must include {phrase}")

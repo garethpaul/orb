@@ -7,18 +7,12 @@ import "github.com/paulmach/orb/maptile"
 // are in the set. The tiles in the input set are expected
 // to all be of the same zoom, e.g. outputs of the Geometry function.
 func MergeUp(set maptile.Set, min maptile.Zoom) maptile.Set {
-	max := maptile.Zoom(1)
-	for t, v := range set {
-		if v {
-			max = t.Z
-			break
-		}
-	}
-	if max > maptile.MaxZoom {
+	max, ok := mergeZoom(set)
+	if !ok {
 		return set
 	}
 
-	if min == max {
+	if min >= max {
 		return set
 	}
 
@@ -84,18 +78,12 @@ func MergeUp(set maptile.Set, min maptile.Zoom) maptile.Set {
 // set. The tiles in the input set are expected to all be of the same
 // zoom, e.g. outputs of the Geometry function.
 func MergeUpPartial(set maptile.Set, min maptile.Zoom, count int) maptile.Set {
-	max := maptile.Zoom(1)
-	for t, v := range set {
-		if v {
-			max = t.Z
-			break
-		}
-	}
-	if max > maptile.MaxZoom {
+	max, ok := mergeZoom(set)
+	if !ok {
 		return set
 	}
 
-	if min == max {
+	if min >= max {
 		return set
 	}
 
@@ -169,4 +157,21 @@ func MergeUpPartial(set maptile.Set, min maptile.Zoom, count int) maptile.Set {
 	}
 
 	return merged
+}
+
+func mergeZoom(set maptile.Set) (maptile.Zoom, bool) {
+	max := maptile.Zoom(1)
+	found := false
+	for t, v := range set {
+		if !v {
+			continue
+		}
+		if t.Z > maptile.MaxZoom || found && t.Z != max {
+			return 0, false
+		}
+		max = t.Z
+		found = true
+	}
+
+	return max, true
 }
