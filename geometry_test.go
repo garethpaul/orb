@@ -71,3 +71,33 @@ func TestCollectionBound(t *testing.T) {
 		t.Errorf("wrong bound: %v != %v", b2, expected)
 	}
 }
+
+func TestCollectionBoundSkipsLeadingEmptyGeometry(t *testing.T) {
+	collection := Collection{
+		LineString{},
+		Polygon{{{10, 10}, {10, 12}, {12, 12}, {12, 10}, {10, 10}}},
+	}
+
+	expected := Bound{Min: Point{10, 10}, Max: Point{12, 12}}
+	if bound := collection.Bound(); !bound.Equal(expected) {
+		t.Fatalf("leading empty geometry changed collection bound: %v != %v", bound, expected)
+	}
+}
+
+func TestCollectionBoundIncludesNestedGeometryGroups(t *testing.T) {
+	collection := Collection{
+		Collection{
+			LineString{},
+			MultiPolygon{
+				{},
+				{{{5, 6}, {5, 9}, {8, 9}, {8, 6}, {5, 6}}},
+			},
+		},
+		Collection{nil, Point{-2, 4}},
+	}
+
+	expected := Bound{Min: Point{-2, 4}, Max: Point{8, 9}}
+	if bound := collection.Bound(); !bound.Equal(expected) {
+		t.Fatalf("nested geometry groups produced incorrect collection bound: %v != %v", bound, expected)
+	}
+}

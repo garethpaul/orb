@@ -34,6 +34,7 @@ WKB_UINT32_COUNT_DESIGN = "docs/plans/2026-06-26-wkb-uint32-count-loops-design.m
 WKB_UINT32_COUNT_PLAN = "docs/plans/2026-06-26-wkb-uint32-count-loops.md"
 SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN = "docs/plans/2026-06-26-simplify-collapsed-exterior-design.md"
 SIMPLIFY_COLLAPSED_EXTERIOR_PLAN = "docs/plans/2026-06-26-simplify-collapsed-exterior.md"
+COLLECTION_BOUND_FIXTURES_PLAN = "docs/plans/2026-06-26-collection-bound-fixtures.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -112,6 +113,7 @@ REQUIRED = [
     WKB_UINT32_COUNT_PLAN,
     SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN,
     SIMPLIFY_COLLAPSED_EXTERIOR_PLAN,
+    COLLECTION_BOUND_FIXTURES_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -346,6 +348,7 @@ def main():
             failures.append(f"MVT degenerate-segment implementation plan must preserve {phrase}")
     bound = read("bound.go")
     bound_tests = read("bound_test.go")
+    geometry_tests = read("geometry_test.go")
     multi_line_tests = read("multi_line_string_test.go")
     multi_polygon_tests = read("multi_polygon_test.go")
     if "if b.IsEmpty()" not in bound or "return other" not in bound:
@@ -363,6 +366,33 @@ def main():
         failures.append("multi line string tests must cover leading empty bounds")
     if "TestMultiPolygon_BoundSkipsLeadingEmptyPolygon" not in multi_polygon_tests:
         failures.append("multi polygon tests must cover leading empty polygon bounds")
+    for test_name in [
+        "TestCollectionBoundSkipsLeadingEmptyGeometry",
+        "TestCollectionBoundIncludesNestedGeometryGroups",
+    ]:
+        if test_name not in geometry_tests:
+            failures.append(f"collection bound fixtures must preserve {test_name}")
+    collection_bound_plan = read(COLLECTION_BOUND_FIXTURES_PLAN)
+    for phrase in [
+        "Status: Completed",
+        "leading empty geometry",
+        "nested geometry groups",
+        "No production source change was required",
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.11 make check",
+        "Five isolated hostile mutations were rejected",
+    ]:
+        if phrase not in collection_bound_plan:
+            failures.append(f"collection bound fixture plan must preserve {phrase}")
+    if "Add aggregate-bound fixtures for leading empty polygons and geometry groups" in read("VISION.md"):
+        failures.append("VISION must remove the completed aggregate-bound fixture priority")
+    for phrase in [
+        "Collection.Bound",
+        "leading empty geometries",
+        "nested geometry collections",
+    ]:
+        if phrase not in read("README.md"):
+            failures.append(f"README must preserve collection bound fixture guidance: {phrase}")
     resample = read("resample/line_string.go")
     resample_tests = read("resample/line_string_test.go")
     interval_start = resample.find("func ToInterval")
