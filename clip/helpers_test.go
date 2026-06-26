@@ -53,6 +53,20 @@ func TestGeometry(t *testing.T) {
 	}
 }
 
+func TestGeometryNestedCollectionKeepsSingleSurvivor(t *testing.T) {
+	bound := orb.Bound{Min: orb.Point{-1, -1}, Max: orb.Point{1, 1}}
+	input := orb.Collection{
+		orb.Collection{orb.LineString{}, orb.Point{0, 0}},
+		orb.Point{5, 5},
+	}
+
+	result := Geometry(bound, input)
+	expected := orb.Point{0, 0}
+	if !orb.Equal(result, expected) {
+		t.Fatalf("nested collection should keep its single clipped survivor: %v != %v", result, expected)
+	}
+}
+
 func TestRing(t *testing.T) {
 	cases := []struct {
 		name   string

@@ -35,6 +35,7 @@ WKB_UINT32_COUNT_PLAN = "docs/plans/2026-06-26-wkb-uint32-count-loops.md"
 SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN = "docs/plans/2026-06-26-simplify-collapsed-exterior-design.md"
 SIMPLIFY_COLLAPSED_EXTERIOR_PLAN = "docs/plans/2026-06-26-simplify-collapsed-exterior.md"
 COLLECTION_BOUND_FIXTURES_PLAN = "docs/plans/2026-06-26-collection-bound-fixtures.md"
+COLLECTION_CLIP_FIXTURE_PLAN = "docs/plans/2026-06-26-collection-clip-fixture.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -114,6 +115,7 @@ REQUIRED = [
     SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN,
     SIMPLIFY_COLLAPSED_EXTERIOR_PLAN,
     COLLECTION_BOUND_FIXTURES_PLAN,
+    COLLECTION_CLIP_FIXTURE_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -351,6 +353,7 @@ def main():
     geometry_tests = read("geometry_test.go")
     multi_line_tests = read("multi_line_string_test.go")
     multi_polygon_tests = read("multi_polygon_test.go")
+    clip_helper_tests = read("clip/helpers_test.go")
     if "if b.IsEmpty()" not in bound or "return other" not in bound:
         failures.append("Bound.Union must return the other bound when the receiver is empty")
     if "TestBoundUnionWithEmptyReceiver" not in bound_tests:
@@ -393,6 +396,25 @@ def main():
     ]:
         if phrase not in read("README.md"):
             failures.append(f"README must preserve collection bound fixture guidance: {phrase}")
+    if "TestGeometryNestedCollectionKeepsSingleSurvivor" not in clip_helper_tests:
+        failures.append("clip tests must preserve nested collection single-survivor coverage")
+    collection_clip_plan = read(COLLECTION_CLIP_FIXTURE_PLAN)
+    for phrase in [
+        "Status: Completed",
+        "nested collection",
+        "single surviving point",
+        "No production source change was required",
+        "Go 1.20.14 and Go 1.25.11",
+        "Four isolated hostile mutations were rejected",
+    ]:
+        if phrase not in collection_clip_plan:
+            failures.append(f"collection clip fixture plan must preserve {phrase}")
+    for phrase in [
+        "Collection clipping recursively drops empty and outside children",
+        "without a redundant collection wrapper",
+    ]:
+        if phrase not in read("README.md"):
+            failures.append(f"README must preserve collection clipping guidance: {phrase}")
     resample = read("resample/line_string.go")
     resample_tests = read("resample/line_string_test.go")
     interval_start = resample.find("func ToInterval")
