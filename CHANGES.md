@@ -1,5 +1,57 @@
 # Changes
 
+## 2026-06-25T19:01:00-0700 — P1 correctness — smartclip empty geometry boundary
+
+### Summary
+
+Inspected all local open-source checkouts, avoided conflicting with concurrent
+Dotfiles work, and fixed a reproducible Orb smart-clipping panic on malformed
+empty polygon children.
+
+### Work completed
+
+- Rejected polygons whose outer ring is empty instead of indexing or promoting
+  a later ring.
+- Ignored empty inner rings and invalid multipolygon children while preserving
+  valid sibling geometry.
+- Added focused Go regressions, a completed implementation plan, public safety
+  documentation, and mutation-sensitive static baseline checks.
+
+### Threads
+
+- Started: none.
+- Continued: direct Orb malformed-geometry hardening.
+- Stopped: Dotfiles supply-chain inspection after another process changed the
+  shared checkout, avoiding duplicate or conflicting edits.
+
+### Files changed
+
+- `clip/smartclip/smart.go` — normalized polygon inputs before clipping.
+- `clip/smartclip/smart_test.go` — covered empty outer, inner, and child geometry.
+- `scripts/check-baseline.py` — preserved the new panic-resistance contract.
+- `README.md`, `SECURITY.md`, `VISION.md` — documented malformed-input behavior.
+- `docs/plans/2026-06-25-smartclip-empty-geometry.md` — recorded requirements and proof.
+
+### Validation
+
+- RED on Go 1.20.14 — reproduced index-out-of-range panics in all three focused cases.
+- `go test ./clip/smartclip -count=1` on Go 1.20.14 — passed.
+- `make check` on Go 1.20.14 — passed tests, race, vet, workflow, static, and root gates.
+- `make check` on Go 1.25.11 — passed tests, race, vet, workflow, static, and root gates.
+
+### Bugs / findings
+
+- P1: Smartclip indexed empty rings and empty child polygons before validation,
+  allowing malformed geometry to panic caller pipelines.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Open a focused pull request, run Codex review and hosted checks, and merge only if clean.
+
 ## 2026-06-25T18:01:05-0700 — P1 correctness — cycle: tile-cover minimum boundary
 
 - Cycle: inspected the public geometry library, recent merge work, hosted checks,

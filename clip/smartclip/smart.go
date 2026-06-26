@@ -87,7 +87,8 @@ func Ring(box orb.Bound, r orb.Ring, o orb.Orientation) orb.MultiPolygon {
 // Rings that are NOT closed AND have an endpoint in the bound will be
 // implicitly closed.
 func Polygon(box orb.Bound, p orb.Polygon, o orb.Orientation) orb.MultiPolygon {
-	if len(p) == 0 {
+	p = normalizePolygon(p)
+	if p == nil {
 		return nil
 	}
 
@@ -117,6 +118,13 @@ func Polygon(box orb.Bound, p orb.Polygon, o orb.Orientation) orb.MultiPolygon {
 // Rings that are NOT closed AND have an endpoint in the bound will be
 // implicitly closed.
 func MultiPolygon(box orb.Bound, mp orb.MultiPolygon, o orb.Orientation) orb.MultiPolygon {
+	normalized := make(orb.MultiPolygon, 0, len(mp))
+	for _, p := range mp {
+		if p = normalizePolygon(p); p != nil {
+			normalized = append(normalized, p)
+		}
+	}
+	mp = normalized
 	if len(mp) == 0 {
 		return nil
 	}
@@ -158,6 +166,27 @@ func MultiPolygon(box orb.Bound, mp orb.MultiPolygon, o orb.Orientation) orb.Mul
 	}
 
 	return result
+}
+
+func normalizePolygon(p orb.Polygon) orb.Polygon {
+	if len(p) == 0 || len(p[0]) == 0 {
+		return nil
+	}
+
+	for i := 1; i < len(p); i++ {
+		if len(p[i]) == 0 {
+			normalized := make(orb.Polygon, 0, len(p)-1)
+			normalized = append(normalized, p[:i]...)
+			for _, r := range p[i+1:] {
+				if len(r) != 0 {
+					normalized = append(normalized, r)
+				}
+			}
+			return normalized
+		}
+	}
+
+	return p
 }
 
 // clipRings will take a set of rings and clip them to the boundary.

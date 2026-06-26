@@ -470,3 +470,34 @@ func TestSmartWrap(t *testing.T) {
 		})
 	}
 }
+
+func TestPolygonIgnoresEmptyInnerRing(t *testing.T) {
+	bound := orb.Bound{Min: orb.Point{0, 0}, Max: orb.Point{5, 5}}
+	outer := orb.Ring{{1, 1}, {4, 1}, {4, 4}, {1, 4}, {1, 1}}
+
+	result := Polygon(bound, orb.Polygon{outer, nil}, orb.CCW)
+	expected := orb.MultiPolygon{{outer}}
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("incorrect polygon: got %v, want %v", result, expected)
+	}
+}
+
+func TestPolygonRejectsEmptyOuterRing(t *testing.T) {
+	bound := orb.Bound{Min: orb.Point{0, 0}, Max: orb.Point{5, 5}}
+	ring := orb.Ring{{1, 1}, {4, 1}, {4, 4}, {1, 4}, {1, 1}}
+
+	if result := Polygon(bound, orb.Polygon{nil, ring}, orb.CCW); result != nil {
+		t.Fatalf("expected invalid polygon to be rejected, got %v", result)
+	}
+}
+
+func TestMultiPolygonIgnoresEmptyChildren(t *testing.T) {
+	bound := orb.Bound{Min: orb.Point{0, 0}, Max: orb.Point{5, 5}}
+	outer := orb.Ring{{1, 1}, {4, 1}, {4, 4}, {1, 4}, {1, 1}}
+
+	result := MultiPolygon(bound, orb.MultiPolygon{nil, {nil, outer}, {outer, nil}}, orb.CCW)
+	expected := orb.MultiPolygon{{outer}}
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("incorrect multipolygon: got %v, want %v", result, expected)
+	}
+}

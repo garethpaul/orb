@@ -23,6 +23,7 @@ NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
 NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
 ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
 MAPTILE_DESCENDANT_PLAN = "docs/plans/2026-06-25-maptile-descendant-boundary.md"
+SMARTCLIP_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-smartclip-empty-geometry.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -91,6 +92,7 @@ REQUIRED = [
     NEGATIVE_CALLBACK_SEGMENT_PLAN,
     ZERO_CALLBACK_TOTAL_PLAN,
     MAPTILE_DESCENDANT_PLAN,
+    SMARTCLIP_EMPTY_GEOMETRY_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -197,6 +199,27 @@ def main():
     ]:
         if phrase not in ring_tests:
             failures.append(f"ring tests must include {phrase}")
+
+    smartclip = read("clip/smartclip/smart.go")
+    smartclip_tests = read("clip/smartclip/smart_test.go")
+    for phrase in [
+        "p = normalizePolygon(p)",
+        "if p = normalizePolygon(p); p != nil",
+        "if len(p) == 0 || len(p[0]) == 0",
+    ]:
+        if phrase not in smartclip:
+            failures.append(f"smartclip must normalize malformed polygons with {phrase}")
+    for phrase in [
+        "TestPolygonIgnoresEmptyInnerRing",
+        "TestPolygonRejectsEmptyOuterRing",
+        "TestMultiPolygonIgnoresEmptyChildren",
+    ]:
+        if phrase not in smartclip_tests:
+            failures.append(f"smartclip tests must include {phrase}")
+    smartclip_plan = read(SMARTCLIP_EMPTY_GEOMETRY_PLAN)
+    for phrase in ["empty outer", "empty inner", "empty child polygons"]:
+        if phrase not in smartclip_plan:
+            failures.append(f"smartclip empty-geometry plan must document {phrase}")
     bound = read("bound.go")
     bound_tests = read("bound_test.go")
     multi_line_tests = read("multi_line_string_test.go")
