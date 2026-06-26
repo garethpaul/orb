@@ -1,5 +1,42 @@
 # Changes
 
+## 2026-06-26T00:00:06-0700 — P2 coverage — cover nested collection clipping
+
+### Summary
+
+Added a public clipping regression for nested collections containing empty,
+inside, and outside children.
+
+### Work completed
+
+- Proved recursive collection clipping removes an empty line string and an
+  outside point.
+- Proved one inside point is returned directly without redundant collection
+  wrappers.
+- Added README, plan, and fail-closed static contracts.
+- Kept production source unchanged because current behavior is correct.
+
+### Validation
+
+- Focused `go test ./clip`, full `make check`, and `go mod verify` on Go
+  1.20.14 and Go 1.25.11 — passed, including all packages, Linux/386 WKB
+  tests, race tests, vet, workflow/static contracts, and Make-root isolation.
+- Four hostile fixture-contract mutations — all rejected.
+- `git diff --check` — passed.
+
+### Bugs / findings
+
+- P2 coverage: the existing all-geometry smoke loop asserted only that empty
+  inputs did not panic, not the normalized nested collection result.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Add a simplification edge-case fixture.
+
 ## 2026-06-25T23:56:28-0700 — P2 coverage — add collection bound fixtures
 
 ### Summary

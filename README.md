@@ -105,6 +105,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   below polygon validity instead of returning a two-point exterior.
 - Smart clipping rejects polygons with empty outer rings and ignores empty
   inner rings or child polygons instead of indexing malformed geometry.
+- Collection clipping recursively drops empty and outside children, then
+  returns a single surviving geometry without a redundant collection wrapper.
 - MVT marshaling returns contextual errors for nil, empty, or too-short geometry
   components and encoded zero-length line or ring segments instead of panicking
   or emitting invalid command sequences.
