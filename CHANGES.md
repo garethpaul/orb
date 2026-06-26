@@ -1,5 +1,29 @@
 # Changes
 
+## 2026-06-26T04:12:21Z — P1 correctness/security — architecture-safe WKB counts
+
+### Summary
+
+Prevented high-bit WKB element counts from being accepted as empty aggregate
+geometries on 32-bit Go builds.
+
+### Work completed
+
+- Added a Linux/386 regression covering multipoint, line, multiline, polygon,
+  multipolygon, and geometry-collection count fields set to `0x80000000`.
+- Kept all six decoder loop indices as `uint32`, matching the WKB wire field
+  without changing existing capped preallocation or streaming behavior.
+- Added the architecture-specific package gate to `make test` and static
+  contracts that reject `int(num)` loop bounds.
+- Documented the design and portability boundary.
+
+### Validation
+
+- RED: Go 1.20.14/386 accepted multipoint type 4 with a nil error.
+- GREEN: native and Linux/386 WKB package tests pass after the loop correction.
+- Full `make check` and `go mod verify` pass on Go 1.20.14 and Go 1.25.11;
+  narrowing a loop back to `int(num)` is rejected by the static contract.
+
 ## 2026-06-25T19:29:00-0700 — P1 correctness — reject degenerate MVT segments
 
 ### Summary

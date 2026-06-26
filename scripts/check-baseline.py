@@ -30,6 +30,8 @@ MVT_EMPTY_GEOMETRY_DESIGN = "docs/plans/2026-06-25-mvt-empty-geometry-marshal-de
 MVT_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-mvt-empty-geometry-marshal.md"
 MVT_ZERO_DELTA_DESIGN = "docs/plans/2026-06-25-mvt-zero-delta-design.md"
 MVT_ZERO_DELTA_PLAN = "docs/plans/2026-06-25-mvt-zero-delta.md"
+WKB_UINT32_COUNT_DESIGN = "docs/plans/2026-06-26-wkb-uint32-count-loops-design.md"
+WKB_UINT32_COUNT_PLAN = "docs/plans/2026-06-26-wkb-uint32-count-loops.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -104,6 +106,8 @@ REQUIRED = [
     MVT_EMPTY_GEOMETRY_PLAN,
     MVT_ZERO_DELTA_DESIGN,
     MVT_ZERO_DELTA_PLAN,
+    WKB_UINT32_COUNT_DESIGN,
+    WKB_UINT32_COUNT_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -153,6 +157,7 @@ def main():
         "export REPO_ROOT",
         'CDPATH= cd -- "$$directory" && /bin/pwd -P)',
         'cd "$$REPO_ROOT" && go test ./...',
+        'GOARCH=386 go test ./encoding/wkb',
         'cd "$$REPO_ROOT" && go test -race ./...',
         'cd "$$REPO_ROOT" && go vet ./...',
         'python3 "$$REPO_ROOT/scripts/check-baseline.py"',
@@ -166,6 +171,33 @@ def main():
     ]:
         if phrase not in makefile:
             failures.append(f"Makefile must include {phrase}")
+
+    wkb_count_test = read("encoding/wkb/count_test.go")
+    for phrase in [
+        "TestHighBitElementCountsAreNotAcceptedAsEmpty",
+        "0x80000000",
+        "errors.Is(err, ErrNotWKB)",
+    ]:
+        if phrase not in wkb_count_test:
+            failures.append(f"WKB count regression must include {phrase}")
+
+    wkb_decoder_sources = "\n".join(
+        read(path)
+        for path in [
+            "encoding/wkb/point.go",
+            "encoding/wkb/line_string.go",
+            "encoding/wkb/polygon.go",
+            "encoding/wkb/collection.go",
+        ]
+    )
+    if "int(num)" in wkb_decoder_sources:
+        failures.append("WKB count loops must not narrow uint32 counts to int")
+    if wkb_decoder_sources.count("for i := uint32(0); i < num; i++") != 6:
+        failures.append("all six WKB count loops must iterate with uint32 indices")
+
+    for path in ["AGENTS.md", "README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if "WKB" not in read(path) or "uint32" not in read(path):
+            failures.append(f"{path} must document architecture-safe WKB uint32 counts")
 
     gitignore = read(".gitignore")
     for phrase in [".env", "*.test", "coverage.out", "tmp/"]:

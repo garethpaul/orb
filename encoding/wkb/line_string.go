@@ -22,7 +22,7 @@ func readLineString(r io.Reader, bom binary.ByteOrder) (orb.LineString, error) {
 	}
 	result := make(orb.LineString, 0, alloc)
 
-	for i := 0; i < int(num); i++ {
+	for i := uint32(0); i < num; i++ {
 		p, err := readPoint(r, bom)
 		if err != nil {
 			return nil, err
@@ -67,7 +67,7 @@ func readMultiLineString(r io.Reader, bom binary.ByteOrder) (orb.MultiLineString
 	}
 	result := make(orb.MultiLineString, 0, alloc)
 
-	for i := 0; i < int(num); i++ {
+	for i := uint32(0); i < num; i++ {
 		byteOrder, typ, err := readByteOrderType(r)
 		if err != nil {
 			return nil, err

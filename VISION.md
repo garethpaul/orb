@@ -32,6 +32,7 @@ Priority:
 - Keep Go module metadata and dependency checksums current
 - Keep degenerate rings and malformed geometry inputs panic-resistant
 - Keep MVT marshaling error-returning for invalid component sizes and encoded zero-length segments
+- Keep WKB `uint32` element-count iteration architecture-safe on 32-bit and 64-bit Go builds
 - Keep empty line strings safe in core helper methods
 - Keep nil geometries in collections safe for aggregate helpers
 - Keep empty bounds and empty union arguments safe as identity values in

@@ -70,6 +70,7 @@
   above-ceiling descendant ranges use zero-coordinate sentinels, and tile-cover
   merge helpers must not index nonexistent siblings.
 - Generated protobuf Go files are present; keep source `.proto`, generated files, and tests in sync.
+- WKB element-count loops must preserve decoded `uint32` semantics so high-bit counts cannot wrap through architecture-sized `int` on 32-bit builds.
 
 ## Agent workflow
 

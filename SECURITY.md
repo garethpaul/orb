@@ -67,6 +67,9 @@ inner rings or child polygons rather than indexing malformed geometry.
 MVT marshaling should return contextual errors for nil, empty, or too-short
 geometry components and for line or ring vertices that collapse to zero-length
 encoded segments instead of panicking or emitting invalid commands.
+WKB element-count loops should retain the decoded `uint32` type so malformed
+high-bit counts cannot truncate through architecture-sized `int` and bypass
+payload reads on 32-bit builds.
 Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
 Empty interval resampling should return before allocating segment distances or
