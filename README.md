@@ -32,6 +32,8 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `docs/plans/2026-06-08-orb-go-module-baseline.md` - completed module hardening plan
 - `docs/plans/2026-06-25-maptile-descendant-boundary.md` - representable tile
   descendant boundary and overflow regression coverage
+- `docs/plans/2026-06-25-mercator-projection-scale-boundary.md` - finite
+  Mercator scaling and high-zoom MVT origin regression coverage
 
 Additional scan context:
 
@@ -71,6 +73,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   returns canonical invalid zero-coordinate endpoints for requested zooms above
   that ceiling, and tile-cover merge helpers preserve above-ceiling sets
   unchanged instead of indexing nonexistent siblings.
+- Mercator projection preserves finite scales through level 1023 and saturates
+  larger exponents, while power-of-two MVT origins use floating-point scaling
+  so valid tile coordinates do not wrap above zoom 20. Zero MVT extents use the
+  specification default before projection.
 - `resample.Resample` rejects an all-zero callback total before interpolation,
   while preserving mixed zero-length and positive callback segments.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go

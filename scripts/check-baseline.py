@@ -24,6 +24,7 @@ NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segmen
 ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
 MAPTILE_DESCENDANT_PLAN = "docs/plans/2026-06-25-maptile-descendant-boundary.md"
 SMARTCLIP_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-smartclip-empty-geometry.md"
+MERCATOR_SCALE_PLAN = "docs/plans/2026-06-25-mercator-projection-scale-boundary.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -406,6 +407,24 @@ def main():
     ]:
         if phrase not in tile_merge_tests:
             failures.append(f"tile-cover merge tests must include {phrase}")
+
+    mercator_source = read("internal/mercator/mercator.go")
+    mercator_tests = read("internal/mercator/mercator_test.go")
+    projection_source = read("encoding/mvt/projection.go")
+    projection_tests = read("encoding/mvt/projection_test.go")
+    for phrase in ["const maxFiniteLevel = 1023", "level > maxFiniteLevel", "scale(level)"]:
+        if phrase not in mercator_source:
+            failures.append(f"Mercator finite scale boundary must include {phrase}")
+    for phrase in ["TestScalarMercatorHighLevels", "TestScalarMercatorExcessiveLevel", "math.MaxUint32"]:
+        if phrase not in mercator_tests:
+            failures.append(f"Mercator scale tests must include {phrase}")
+    if "if extent == 0" not in projection_source or "extent = DefaultExtent" not in projection_source:
+        failures.append("MVT projection must default a zero extent before scaling")
+    if "math.Ldexp(float64(tile.X), int(n))" not in projection_source or "math.Ldexp(float64(tile.Y), int(n))" not in projection_source:
+        failures.append("power-of-two MVT origins must use floating-point scaling")
+    for phrase in ["TestPowerOfTwoProjectionHighZoom", "TestProjectionZeroExtentUsesDefault", "math.IsNaN(coordinate)"]:
+        if phrase not in projection_tests:
+            failures.append(f"MVT projection tests must include {phrase}")
 
     planar_contains = read("planar/contains.go")
     planar_contains_tests = read("planar/contains_test.go")
@@ -953,6 +972,28 @@ def main():
     for path, phrase in descendant_guidance.items():
         if phrase not in read(path):
             failures.append(f"{path} must document the maptile descendant boundary")
+
+    mercator_plan = read(MERCATOR_SCALE_PLAN)
+    for phrase in [
+        "status: completed",
+        "RED: Go 1.20.14",
+        "go test ./internal/mercator ./encoding/mvt",
+        "level 1023",
+        "math.Ldexp",
+        "hostile mutations",
+    ]:
+        if phrase not in mercator_plan:
+            failures.append(f"Mercator scale plan must record {phrase}")
+
+    mercator_guidance = {
+        "README.md": "Mercator projection preserves finite scales through level 1023",
+        "SECURITY.md": "Mercator scale exponents must remain finite",
+        "VISION.md": "Keep Mercator scales finite and high-zoom MVT origins free of integer wraparound",
+        "CHANGES.md": "power-of-two MVT origins",
+    }
+    for path, phrase in mercator_guidance.items():
+        if phrase not in read(path):
+            failures.append(f"{path} must document the Mercator projection scale boundary")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")

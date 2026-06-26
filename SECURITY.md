@@ -86,6 +86,9 @@ Descendant tile operations must not wrap coordinates beyond `maptile.MaxZoom`;
 maximum-zoom tiles have no children, and above-ceiling ranges use a canonical
 zero-coordinate sentinel. Tile-cover merge helpers preserve above-ceiling sets
 without traversing nonexistent siblings.
+Mercator scale exponents must remain finite, and power-of-two MVT projection
+must not narrow high-zoom tile origins through `uint32` shifts. Zero MVT extents
+must use the default extent before projection.
 Nil callbacks, non-finite coordinates, underflowing sample spacing, and point
 requests above the 64 MiB resampling output budget should fail closed before
 allocation or interpolation.

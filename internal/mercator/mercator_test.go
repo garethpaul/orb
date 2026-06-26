@@ -55,3 +55,36 @@ func TestScalarMercator(t *testing.T) {
 		t.Errorf("Scalar Mercator, bottom of the world error, got %v", y)
 	}
 }
+
+func TestScalarMercatorHighLevels(t *testing.T) {
+	for _, level := range []uint32{33, 44, 1023} {
+		x, y := ToPlanar(0, 0, level)
+		if math.IsNaN(x) || math.IsInf(x, 0) || math.IsNaN(y) || math.IsInf(y, 0) {
+			t.Errorf("Scalar Mercator, level %d should remain finite: %f %f", level, x, y)
+		}
+
+		lng, lat := ToGeo(x, y, level)
+		if lng != 0 || lat != 0 {
+			t.Errorf("Scalar Mercator, level %d round trip incorrect: %f %f", level, lng, lat)
+		}
+	}
+}
+
+func TestScalarMercatorExcessiveLevel(t *testing.T) {
+	wantX, wantY := ToPlanar(0, 0, 1023)
+	if wantX != math.Exp2(1022) || wantY != math.Exp2(1022) {
+		t.Fatalf("Scalar Mercator, level 1023 scale incorrect: %f %f", wantX, wantY)
+	}
+
+	for _, level := range []uint32{1024, math.MaxUint32} {
+		x, y := ToPlanar(0, 0, level)
+		if x != wantX || y != wantY {
+			t.Errorf("Scalar Mercator, level %d should use the largest finite scale: %f %f", level, x, y)
+		}
+
+		lng, lat := ToGeo(wantX, wantY, level)
+		if lng != 0 || lat != 0 {
+			t.Errorf("Scalar Mercator, level %d round trip incorrect: %f %f", level, lng, lat)
+		}
+	}
+}

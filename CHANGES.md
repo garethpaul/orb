@@ -57,6 +57,36 @@ empty polygon children.
 
 - Merge the focused pull request after this documentation-only update passes hosted checks.
 
+## 2026-06-25T19:00:25-0700 — P1 correctness — cycle: Mercator projection scale boundary
+
+- Cycle: inspected the public geometry library, recent zoom-boundary work,
+  projection callers, numeric limits, tests, plans, and documented risks.
+- Threads: used four read-only investigators to trace callers, historical
+  contracts, numerical behavior, and regression strategy.
+- Bug: Mercator levels at 1024 and above overflowed `math.Exp2` to infinity,
+  while power-of-two MVT projection narrowed tile origins through `uint32`
+  shifts and wrapped valid coordinates at zoom 21 and above.
+- Work: centralized finite Mercator scaling through level 1023, saturated larger
+  exponents at that finite boundary, replaced MVT origin shifts with
+  `math.Ldexp`, defaulted explicit zero extents before projection, and added
+  high-level, high-zoom, non-finite, and zero-extent regressions plus static
+  contracts and repository guidance.
+- Files: changed `internal/mercator`, `encoding/mvt`, documentation, and the
+  static baseline; added the completed Mercator projection scale plan.
+- Validation: RED on Go 1.20.14 reproduced infinite coordinates, plausible
+  incorrect inverse coordinates, and wrapped power-of-two MVT origins. Focused
+  tests, full `make check`, and `go mod verify` pass on Go 1.20.14 and Go
+  1.25.11; seven meaningful hostile mutations covering both scale consumers and
+  both origin axes are rejected. Independent review found and closed non-finite
+  assertion and zero-extent gaps; hosted evidence follows before merge.
+- Findings: MVT intentionally derives finite projection levels above
+  `maptile.MaxZoom`, so the numeric boundary is float64 exponent capacity rather
+  than tile-coordinate capacity. Converting tile origins before scaling avoids
+  integer narrowing while preserving the optimized projection path.
+- Blockers: the host has no Go binary, so validation uses pinned official Docker
+  images.
+- Next: complete exact-head review and confirm hosted validation before merge.
+
 ## 2026-06-25T18:01:05-0700 — P1 correctness — cycle: tile-cover minimum boundary
 
 - Cycle: inspected the public geometry library, recent merge work, hosted checks,
