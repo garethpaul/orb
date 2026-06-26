@@ -165,6 +165,39 @@ func TestFraction(t *testing.T) {
 	if p[0] != 1<<32 {
 		t.Errorf("zoom 32 x incorrect: %f != %v", p[0], 1<<32)
 	}
+
+	for _, zoom := range []Zoom{33, 1023} {
+		p = Fraction(orb.Point{0, 0}, zoom)
+		if math.IsNaN(p[0]) || math.IsInf(p[0], 0) || math.IsNaN(p[1]) || math.IsInf(p[1], 0) {
+			t.Errorf("zoom %d fraction should remain finite: %v", zoom, p)
+		}
+	}
+
+	want := Fraction(orb.Point{0, 0}, 1023)
+	if want[0] != math.Exp2(1022) || want[1] != math.Exp2(1022) {
+		t.Fatalf("zoom 1023 fraction scale incorrect: %v", want)
+	}
+	for _, zoom := range []Zoom{1024, Zoom(math.MaxUint32)} {
+		p = Fraction(orb.Point{0, 0}, zoom)
+		if !p.Equal(want) {
+			t.Errorf("zoom %d fraction should use the largest finite scale: %v != %v", zoom, p, want)
+		}
+
+		p = Fraction(orb.Point{-180, 0}, zoom)
+		if p[0] != 0 || math.IsNaN(p[1]) || math.IsInf(p[1], 0) {
+			t.Errorf("zoom %d western fraction should remain finite: %v", zoom, p)
+		}
+
+		p = Fraction(orb.Point{540, 0}, zoom)
+		if p[0] != math.MaxFloat64 {
+			t.Errorf("zoom %d excessive longitude should saturate: %v", zoom, p)
+		}
+
+		p = Fraction(orb.Point{-900, 0}, zoom)
+		if p[0] != -math.MaxFloat64 {
+			t.Errorf("zoom %d negative excessive longitude should saturate: %v", zoom, p)
+		}
+	}
 }
 
 func TestContains(t *testing.T) {

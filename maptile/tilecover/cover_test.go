@@ -102,6 +102,32 @@ func TestTestdata(t *testing.T) {
 	}
 }
 
+func TestExcessiveZoomLineAndPolygonCovers(t *testing.T) {
+	line := orb.LineString{{0, 85}, {0, 0}}
+	polygon := orb.Polygon{{{0, 85}, {1, 0}, {-1, 0}, {0, 85}}}
+	collection := orb.Collection{orb.MultiLineString{line}, orb.MultiPolygon{polygon}}
+
+	for _, zoom := range []maptile.Zoom{maptile.MaxZoom + 1, 1024, maptile.Zoom(math.MaxUint32)} {
+		covers := []maptile.Set{
+			Point(line[0], zoom),
+			MultiPoint(orb.MultiPoint{line[0]}, zoom),
+			LineString(line, zoom),
+			MultiLineString(orb.MultiLineString{line}, zoom),
+			Ring(polygon[0], zoom),
+			Polygon(polygon, zoom),
+			MultiPolygon(orb.MultiPolygon{polygon}, zoom),
+			Bound(polygon.Bound(), zoom),
+			Collection(collection, zoom),
+			Geometry(collection, zoom),
+		}
+		for i, set := range covers {
+			if len(set) != 0 {
+				t.Errorf("zoom %d cover %d should fail closed: %v", zoom, i, set)
+			}
+		}
+	}
+}
+
 func TestCountries(t *testing.T) {
 	files, err := ioutil.ReadDir("./testdata/world")
 	if err != nil {

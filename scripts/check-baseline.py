@@ -25,6 +25,7 @@ ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
 MAPTILE_DESCENDANT_PLAN = "docs/plans/2026-06-25-maptile-descendant-boundary.md"
 SMARTCLIP_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-smartclip-empty-geometry.md"
 MERCATOR_SCALE_PLAN = "docs/plans/2026-06-25-mercator-projection-scale-boundary.md"
+MAPTILE_FRACTION_PLAN = "docs/plans/2026-06-25-maptile-fraction-boundary.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -68,6 +69,7 @@ REQUIRED = [
     "go.mod",
     "go.sum",
     PLAN,
+    MAPTILE_FRACTION_PLAN,
     "docs/plans/2026-06-09-degenerate-ring-guards.md",
     "docs/plans/2026-06-09-empty-linestring-reverse.md",
     "docs/plans/2026-06-09-collection-dimensions-nil.md",
@@ -390,6 +392,12 @@ def main():
     ]:
         if phrase not in tile_source:
             failures.append(f"maptile descendant boundary must include {phrase}")
+    for phrase in ["const maxFiniteZoom Zoom = 1023", "if z > maxFiniteZoom", "finiteProduct(lng, maxtiles)", "math.MaxFloat64"]:
+        if phrase not in tile_source:
+            failures.append(f"maptile fraction boundary must include {phrase}")
+    for phrase in ["zoom %d fraction should use the largest finite scale", "western fraction should remain finite", "excessive longitude should saturate"]:
+        if phrase not in tile_tests:
+            failures.append(f"maptile fraction tests must include {phrase}")
     for phrase in [
         "maximum zoom tile must not wrap into children",
         "last representable children must remain valid",
@@ -407,6 +415,18 @@ def main():
     ]:
         if phrase not in tile_merge_tests:
             failures.append(f"tile-cover merge tests must include {phrase}")
+    line_source = read("maptile/tilecover/line_string.go")
+    helpers_source = read("maptile/tilecover/helpers.go")
+    polygon_source = read("maptile/tilecover/polygon.go")
+    cover_tests = read("maptile/tilecover/cover_test.go")
+    if line_source.count("if z > maptile.MaxZoom") < 2 or "if zoom > maptile.MaxZoom" not in line_source:
+        failures.append("line-based tile covers must reject excessive zooms before wrapper and internal traversal")
+    if helpers_source.count("if z > maptile.MaxZoom") < 5:
+        failures.append("tile-cover helpers must reject excessive zooms before dispatch and iteration")
+    if polygon_source.count("if z > maptile.MaxZoom") < 3:
+        failures.append("polygon tile-cover wrappers must reject excessive zooms before iteration")
+    if "TestExcessiveZoomLineAndPolygonCovers" not in cover_tests:
+        failures.append("tile-cover tests must cover excessive zoom traversal")
 
     mercator_source = read("internal/mercator/mercator.go")
     mercator_tests = read("internal/mercator/mercator_test.go")
@@ -994,6 +1014,21 @@ def main():
     for path, phrase in mercator_guidance.items():
         if phrase not in read(path):
             failures.append(f"{path} must document the Mercator projection scale boundary")
+
+    fraction_plan = read(MAPTILE_FRACTION_PLAN)
+    for phrase in ["status: completed", "RED: Go 1.20.14", "TestFraction", "TestExcessiveZoomLineAndPolygonCovers", "hostile mutations"]:
+        if phrase not in fraction_plan:
+            failures.append(f"maptile fraction plan must record {phrase}")
+
+    fraction_guidance = {
+        "README.md": "`maptile.Fraction` follows the same finite exponent boundary",
+        "SECURITY.md": "Direct tile fractions must remain finite at excessive zooms",
+        "VISION.md": "Keep direct tile fractions finite and unrepresentable tile covers fail-closed",
+        "CHANGES.md": "saturated overflowing finite longitude products",
+    }
+    for path, phrase in fraction_guidance.items():
+        if phrase not in read(path):
+            failures.append(f"{path} must document the maptile fraction boundary")
 
     try:
         ET.parse(ROOT / "docs/readme-overview.svg")
