@@ -31,6 +31,7 @@ Priority:
 - Keep package READMEs aligned with actual APIs
 - Keep Go module metadata and dependency checksums current
 - Keep degenerate rings and malformed geometry inputs panic-resistant
+- Keep MVT marshaling error-returning for nil, empty, or too-short geometry components
 - Keep empty line strings safe in core helper methods
 - Keep nil geometries in collections safe for aggregate helpers
 - Keep empty bounds and empty union arguments safe as identity values in

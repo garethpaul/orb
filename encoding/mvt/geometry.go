@@ -17,6 +17,10 @@ const (
 )
 
 func encodeGeometry(g orb.Geometry) (vectortile.Tile_GeomType, []uint32, error) {
+	if err := validateGeometryForEncoding(g); err != nil {
+		return 0, nil, err
+	}
+
 	switch g := g.(type) {
 	case orb.Point:
 		e := newGeomEncoder(3)
@@ -88,6 +92,65 @@ func encodeGeometry(g orb.Geometry) (vectortile.Tile_GeomType, []uint32, error) 
 	}
 
 	panic(fmt.Sprintf("geometry type not supported: %T", g))
+}
+
+func validateGeometryForEncoding(g orb.Geometry) error {
+	if g == nil {
+		return errors.New("geometry is nil")
+	}
+
+	switch g := g.(type) {
+	case orb.MultiPoint:
+		if len(g) == 0 {
+			return errors.New("multipoint is empty")
+		}
+	case orb.LineString:
+		if len(g) < 2 {
+			return errors.New("line string must contain at least two points")
+		}
+	case orb.MultiLineString:
+		if len(g) == 0 {
+			return errors.New("multi line string is empty")
+		}
+		for i, lineString := range g {
+			if len(lineString) < 2 {
+				return fmt.Errorf("multi line string child %d must contain at least two points", i)
+			}
+		}
+	case orb.Ring:
+		if len(g) < 3 {
+			return errors.New("ring must contain at least three points")
+		}
+	case orb.Polygon:
+		if len(g) == 0 {
+			return errors.New("polygon is empty")
+		}
+		for i, ring := range g {
+			if len(ring) < 3 {
+				return fmt.Errorf("polygon ring %d must contain at least three points", i)
+			}
+		}
+	case orb.MultiPolygon:
+		if len(g) == 0 {
+			return errors.New("multi polygon is empty")
+		}
+		for polygonIndex, polygon := range g {
+			if len(polygon) == 0 {
+				return fmt.Errorf("multi polygon child %d is empty", polygonIndex)
+			}
+			for ringIndex, ring := range polygon {
+				if len(ring) < 3 {
+					return fmt.Errorf(
+						"multi polygon child %d ring %d must contain at least three points",
+						polygonIndex,
+						ringIndex,
+					)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 type geomEncoder struct {
