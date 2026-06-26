@@ -20,7 +20,7 @@ func readCollection(r io.Reader, bom binary.ByteOrder) (orb.Collection, error) {
 	}
 	result := make(orb.Collection, 0, alloc)
 
-	for i := 0; i < int(num); i++ {
+	for i := uint32(0); i < num; i++ {
 		geom, err := NewDecoder(r).Decode()
 		if err != nil {
 			return nil, err

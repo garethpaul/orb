@@ -22,7 +22,7 @@ func readPolygon(r io.Reader, bom binary.ByteOrder) (orb.Polygon, error) {
 	}
 	result := make(orb.Polygon, 0, alloc)
 
-	for i := 0; i < int(num); i++ {
+	for i := uint32(0); i < num; i++ {
 		ls, err := readLineString(r, bom)
 		if err != nil {
 			return nil, err
@@ -72,7 +72,7 @@ func readMultiPolygon(r io.Reader, bom binary.ByteOrder) (orb.MultiPolygon, erro
 	}
 	result := make(orb.MultiPolygon, 0, alloc)
 
-	for i := 0; i < int(num); i++ {
+	for i := uint32(0); i < num; i++ {
 		byteOrder, typ, err := readByteOrderType(r)
 		if err != nil {
 			return nil, err

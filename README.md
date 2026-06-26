@@ -171,6 +171,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   instead of panicking.
 - Non-finite interval distances should remain rejected before resampling
   calculations or caller-provided distance callbacks.
+- WKB decoders keep wire-format element counts as `uint32`; the Linux/386 test
+  gate rejects high-bit counts that would otherwise wrap through `int` and be
+  accepted as empty geometries on 32-bit builds.
 
 ## Maintenance Notes
 

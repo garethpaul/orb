@@ -16,6 +16,12 @@ lint: vet
 
 test:
 	cd "$$REPO_ROOT" && go test ./...
+	@if [ "$$(go env GOOS)" = linux ] && \
+		{ [ "$$(go env GOARCH)" = amd64 ] || [ "$$(go env GOARCH)" = 386 ]; }; then \
+		cd "$$REPO_ROOT" && GOARCH=386 go test ./encoding/wkb; \
+	else \
+		echo "Linux/386 WKB tests skipped outside Linux x86"; \
+	fi
 
 race:
 	cd "$$REPO_ROOT" && go test -race ./...
