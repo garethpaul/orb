@@ -25,6 +25,8 @@ ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
 MAPTILE_DESCENDANT_PLAN = "docs/plans/2026-06-25-maptile-descendant-boundary.md"
 SMARTCLIP_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-smartclip-empty-geometry.md"
 MERCATOR_SCALE_PLAN = "docs/plans/2026-06-25-mercator-projection-scale-boundary.md"
+MVT_EMPTY_GEOMETRY_DESIGN = "docs/plans/2026-06-25-mvt-empty-geometry-marshal-design.md"
+MVT_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-mvt-empty-geometry-marshal.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -94,6 +96,8 @@ REQUIRED = [
     ZERO_CALLBACK_TOTAL_PLAN,
     MAPTILE_DESCENDANT_PLAN,
     SMARTCLIP_EMPTY_GEOMETRY_PLAN,
+    MVT_EMPTY_GEOMETRY_DESIGN,
+    MVT_EMPTY_GEOMETRY_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -221,6 +225,42 @@ def main():
     for phrase in ["empty outer", "empty inner", "empty child polygons"]:
         if phrase not in smartclip_plan:
             failures.append(f"smartclip empty-geometry plan must document {phrase}")
+
+    mvt_geometry = read("encoding/mvt/geometry.go")
+    mvt_marshal_tests = read("encoding/mvt/marshal_test.go")
+    for phrase in [
+        "validateGeometryForEncoding(g)",
+        "if g == nil",
+        "line string must contain at least two points",
+        "multi line string child %d must contain at least two points",
+        "polygon ring %d must contain at least three points",
+        "multi polygon child %d ring %d must contain at least three points",
+    ]:
+        if phrase not in mvt_geometry:
+            failures.append(f"MVT geometry encoding must reject invalid components with {phrase}")
+    for phrase in [
+        "TestMarshalRejectsInvalidGeometryComponents",
+        'name: "nil geometry"',
+        'name: "one-point multiline child"',
+        'name: "two-point multipolygon ring"',
+        "layer empty: feature 0: error encoding geometry",
+    ]:
+        if phrase not in mvt_marshal_tests:
+            failures.append(f"MVT marshal tests must preserve {phrase}")
+
+    mvt_empty_design = read(MVT_EMPTY_GEOMETRY_DESIGN)
+    mvt_empty_plan = read(MVT_EMPTY_GEOMETRY_PLAN)
+    for phrase in ["## Status: Accepted", "Do not silently drop features", "Vector Tile 2.1 specification"]:
+        if phrase not in mvt_empty_design:
+            failures.append(f"MVT empty-geometry design must document {phrase}")
+    for phrase in [
+        "## Status: Completed",
+        "Twelve isolated hostile mutations were rejected",
+        "28212959729",
+        "28212962853",
+    ]:
+        if phrase not in mvt_empty_plan:
+            failures.append(f"MVT invalid-geometry implementation plan must preserve {phrase}")
     bound = read("bound.go")
     bound_tests = read("bound_test.go")
     multi_line_tests = read("multi_line_string_test.go")

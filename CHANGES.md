@@ -1,5 +1,76 @@
 # Changes
 
+## 2026-06-25T19:16:00-0700 — P1 correctness — reject invalid MVT geometry components
+
+### Summary
+
+Fixed public MVT marshaling so nil, empty, or too-short geometry components
+return contextual errors instead of panicking or emitting invalid commands.
+
+### Work completed
+
+- Added public `Marshal` regressions for nil geometry and every empty or
+  too-short point, line, ring, polygon, and nested multi-geometry shape.
+- Reproduced missing errors and index-out-of-range panics on Go 1.20.14.
+- Centralized pre-encoding validation before command allocation or point access,
+  including MVT minimum line and ring command counts.
+- Preserved existing layer and feature error context without silently dropping
+  malformed features or child components.
+- Added design, implementation, static, and public guidance contracts.
+
+### Threads
+
+- Started: none.
+- Continued: direct MVT malformed-input hardening after reviewing recent Orb
+  smartclip and Mercator fixes.
+- Stopped: none.
+
+### Files changed
+
+- `encoding/mvt/geometry.go` — validates encoded geometry shapes.
+- `encoding/mvt/marshal_test.go` — covers the public panic/error boundary.
+- `scripts/check-baseline.py` — preserves source, tests, plans, and guidance.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — document the MVT
+  error-return contract.
+- `docs/plans/2026-06-25-mvt-empty-geometry-marshal-design.md` and
+  `docs/plans/2026-06-25-mvt-empty-geometry-marshal.md` — record the decision
+  and implementation steps.
+
+### Validation
+
+- Focused RED on Go 1.20.14 — reproduced two missing errors and five panics,
+  then five additional missing errors for one-point lines and two-point rings.
+- Focused and full `encoding/mvt` tests — passed on Go 1.20.14 and Go 1.25.11.
+- Full `make check` and `go mod verify` — passed in pinned Go 1.20.14 and Go
+  1.25.11 containers, including all packages, race tests, vet, workflow/static
+  contracts, and Make-root isolation.
+- Twelve isolated hostile mutations — rejected removal or weakening of the
+  encoder call, nil guard, and every top-level or nested shape minimum.
+- `git diff --check` — passed.
+- Hosted Check runs `28212959729` and `28212963171` — passed on Go 1.20.14, Go
+  1.25.3, and Go 1.25.11.
+- CodeQL run `28212962853` — passed for actions, Go, and Python analysis.
+- Codex review helper with `codex review --base origin/master` — blocked by
+  local OpenAI API authentication (HTTP 401); exact-head manual review found no
+  actionable findings.
+
+### Bugs / findings
+
+- P1: `mvt.Marshal` could panic caller pipelines on empty lines or rings and
+  emit nonconformant commands for empty collections, one-point lines, and
+  two-point rings.
+
+### Blockers
+
+- The host has no Go binary; pinned official Docker images provide local Go
+  1.20.14 and Go 1.25.11 validation.
+- Local Codex API authentication remains unavailable; exact-head manual review
+  provided the review fallback.
+
+### Next action
+
+- Merge PR #22 after the final documentation-only head passes hosted checks.
+
 ## 2026-06-25T19:01:00-0700 — P1 correctness — smartclip empty geometry boundary
 
 ### Summary
