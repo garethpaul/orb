@@ -10,6 +10,9 @@ import (
 // LineString creates a tile cover for the line string.
 func LineString(ls orb.LineString, z maptile.Zoom) maptile.Set {
 	set := make(maptile.Set)
+	if z > maptile.MaxZoom {
+		return set
+	}
 	line(set, ls, z, nil)
 
 	return set
@@ -18,6 +21,9 @@ func LineString(ls orb.LineString, z maptile.Zoom) maptile.Set {
 // MultiLineString creates a tile cover for the line strings.
 func MultiLineString(mls orb.MultiLineString, z maptile.Zoom) maptile.Set {
 	set := make(maptile.Set)
+	if z > maptile.MaxZoom {
+		return set
+	}
 	for _, ls := range mls {
 		line(set, ls, z, nil)
 	}
@@ -31,6 +37,10 @@ func line(
 	zoom maptile.Zoom,
 	ring [][2]uint32,
 ) [][2]uint32 {
+	if zoom > maptile.MaxZoom {
+		return ring
+	}
+
 	inf := math.Inf(1)
 
 	prevX := -1.0

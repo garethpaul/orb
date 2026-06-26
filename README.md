@@ -77,6 +77,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   larger exponents, while power-of-two MVT origins use floating-point scaling
   so valid tile coordinates do not wrap above zoom 20. Zero MVT extents use the
   specification default before projection.
+- `maptile.Fraction` follows the same finite exponent boundary and saturates
+  overflowing longitude products, while tile covers above `maptile.MaxZoom`
+  fail closed before dispatch or traversal.
 - `resample.Resample` rejects an all-zero callback total before interpolation,
   while preserving mixed zero-length and positive callback segments.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go

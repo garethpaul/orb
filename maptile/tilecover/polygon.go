@@ -9,6 +9,9 @@ import (
 
 // Ring creates a tile cover for the ring.
 func Ring(r orb.Ring, z maptile.Zoom) maptile.Set {
+	if z > maptile.MaxZoom {
+		return make(maptile.Set)
+	}
 	if len(r) == 0 {
 		return make(maptile.Set)
 	}
@@ -19,6 +22,9 @@ func Ring(r orb.Ring, z maptile.Zoom) maptile.Set {
 // Polygon creates a tile cover for the polygon.
 func Polygon(p orb.Polygon, z maptile.Zoom) maptile.Set {
 	set := make(maptile.Set)
+	if z > maptile.MaxZoom {
+		return set
+	}
 	polygon(set, p, z)
 
 	return set
@@ -27,6 +33,9 @@ func Polygon(p orb.Polygon, z maptile.Zoom) maptile.Set {
 // MultiPolygon creates a tile cover for the multi-polygon.
 func MultiPolygon(mp orb.MultiPolygon, z maptile.Zoom) maptile.Set {
 	set := make(maptile.Set)
+	if z > maptile.MaxZoom {
+		return set
+	}
 	for _, p := range mp {
 		polygon(set, p, z)
 	}
