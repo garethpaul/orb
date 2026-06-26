@@ -78,7 +78,9 @@ empty polygon children.
   tests, full `make check`, and `go mod verify` pass on Go 1.20.14 and Go
   1.25.11; seven meaningful hostile mutations covering both scale consumers and
   both origin axes are rejected. Independent review found and closed non-finite
-  assertion and zero-extent gaps; hosted evidence follows before merge.
+  assertion and zero-extent gaps, and three reviewers approve the corrected
+  patch. The required Codex branch review was attempted at `0b1dc6c` and skipped
+  after an HTTP 401 authentication failure; hosted evidence follows before merge.
 - Findings: MVT intentionally derives finite projection levels above
   `maptile.MaxZoom`, so the numeric boundary is float64 exponent capacity rather
   than tile-coordinate capacity. Converting tile origins before scaling avoids

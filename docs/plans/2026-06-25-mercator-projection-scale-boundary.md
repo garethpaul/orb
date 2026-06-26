@@ -36,5 +36,7 @@ coordinates once zoom plus extent bits exceeded 32.
   level guard, lowering the finite boundary, bypassing either helper call, and
   restoring either integer origin shift.
 - Independent review found and closed non-finite assertion and zero-extent
-  gaps. Hosted validation and exact-head review evidence are recorded in the
-  change log before merge.
+  gaps; three reviewers approved the corrected patch.
+- The required Codex branch review was attempted at `0b1dc6c` and skipped after
+  the helper failed authentication with HTTP 401.
+- Hosted validation evidence is recorded in the change log before merge.
