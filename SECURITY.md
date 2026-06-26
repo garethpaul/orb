@@ -76,6 +76,9 @@ Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
 Collection simplification should remove nil and collapsed children so callers
 do not receive stale nil geometry slots after validating the simplified result.
+Geometry rounding should reject a zero factor before mutating any coordinates
+so malformed scale input cannot replace finite values with `NaN` or partially
+transform nested collections.
 Empty interval resampling should return before allocating segment distances or
 calling caller-provided distance functions.
 Empty, single-point, and zero-length resampling should retain public regression

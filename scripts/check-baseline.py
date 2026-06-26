@@ -38,6 +38,7 @@ SIMPLIFY_COLLAPSED_EXTERIOR_PLAN = "docs/plans/2026-06-26-simplify-collapsed-ext
 COLLECTION_BOUND_FIXTURES_PLAN = "docs/plans/2026-06-26-collection-bound-fixtures.md"
 COLLECTION_CLIP_FIXTURE_PLAN = "docs/plans/2026-06-26-collection-clip-fixture.md"
 SIMPLIFY_COLLECTION_COMPACTION_PLAN = "docs/plans/2026-06-26-simplify-collection-compaction.md"
+ROUND_ZERO_FACTOR_PLAN = "docs/plans/2026-06-26-round-zero-factor.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -120,6 +121,7 @@ REQUIRED = [
     COLLECTION_BOUND_FIXTURES_PLAN,
     COLLECTION_CLIP_FIXTURE_PLAN,
     SIMPLIFY_COLLECTION_COMPACTION_PLAN,
+    ROUND_ZERO_FACTOR_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -591,6 +593,46 @@ def main():
     for path, phrase in simplify_collection_guidance.items():
         if phrase not in read(path):
             failures.append(f"{path} must preserve simplified collection compaction guidance")
+    round_source = read("round.go")
+    round_tests = read("round_test.go")
+    for phrase in [
+        "if f == 0",
+        "return round(g, f)",
+        "func round(g Geometry, f float64) Geometry {\n\tif g == nil {\n\t\treturn nil",
+        "g[i] = round(g[i], f)",
+    ]:
+        if phrase not in round_source:
+            failures.append(f"Round must preserve zero-factor safety: {phrase}")
+    for phrase in [
+        "TestRoundZeroFactorLeavesGeometryUnchanged",
+        "TestRoundNegativeFactorMatchesPositiveFactor",
+        "collection preserves nil child",
+        "Round(input, 0)",
+        "Round(negativeInput, -1000)",
+        "Round(positiveInput, 1000)",
+    ]:
+        if phrase not in round_tests:
+            failures.append(f"Round regression must preserve {phrase}")
+    if round_tests.count("reflect.DeepEqual(result, expected)") < 3:
+        failures.append("Round regressions must preserve all three exact geometry comparisons")
+    round_plan = read(ROUND_ZERO_FACTOR_PLAN)
+    for phrase in [
+        "Status: completed",
+        "zero factor replaced finite coordinates with `NaN`",
+        "Go 1.20.14 and Go 1.25.11",
+        "hostile mutations were rejected",
+    ]:
+        if phrase not in round_plan:
+            failures.append(f"Round factor plan must preserve {phrase}")
+    round_guidance = {
+        "README.md": "`Round` leaves geometry unchanged for a zero factor",
+        "SECURITY.md": "Geometry rounding should reject a zero factor",
+        "VISION.md": "Keep zero geometry rounding factors fail-safe and mutation-free",
+        "AGENTS.md": "A zero factor passed to `Round` must leave every geometry type unchanged",
+    }
+    for path, phrase in round_guidance.items():
+        if phrase not in read(path):
+            failures.append(f"{path} must preserve zero-factor Round guidance")
     polygon_helper = simplify_helpers.split("func polygon", 1)[1].split(
         "func multiPolygon", 1
     )[0]

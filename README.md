@@ -92,6 +92,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   `MAKEFILE_LIST` overrides fail closed before Go or checker gates run.
 - Core ring helpers treat degenerate rings as non-closed or zero-orientation
   inputs instead of panicking.
+- `Round` leaves geometry unchanged for a zero factor instead of replacing
+  finite coordinates with `NaN`; negative factors retain their historical
+  positive-factor equivalence, and nested collections reuse the same factor.
 - `LineString.Reverse` handles empty line strings without panicking.
 - `Collection.Dimensions` skips nil geometries and keeps all-nil collections at
   the same empty dimension result.
