@@ -55,6 +55,12 @@ same encoded integer coordinate and would emit forbidden zero-length segments.
   normalization bypasses, stale cursor state, weak collapse minimums, preserved
   encoded closure, and every top-level or nested encoder bypass.
 - `git diff --check` — passed.
+- Hosted Check runs `28213260959` and `28213262667` — passed on Go 1.20.14, Go
+  1.25.3, and Go 1.25.11.
+- CodeQL run `28213261684` — passed for actions, Go, and Python analysis.
+- Codex review helper with `codex review --base origin/master` — blocked by
+  local OpenAI API authentication (HTTP 401); exact-head manual review found no
+  actionable findings.
 
 ### Bugs / findings
 
@@ -67,10 +73,12 @@ same encoded integer coordinate and would emit forbidden zero-length segments.
 
 - The host has no Go binary; pinned official Docker images provide local Go
   1.20.14 and Go 1.25.11 validation.
+- Local Codex API authentication remains unavailable; exact-head manual review
+  provided the review fallback.
 
 ### Next action
 
-- Open the focused PR and run the exact-head review and hosted validation gates.
+- Merge PR #24 after the final documentation-only head passes hosted checks.
 
 ## 2026-06-25T19:16:00-0700 — P1 correctness — reject invalid MVT geometry components
 

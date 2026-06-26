@@ -297,9 +297,12 @@ def main():
         if phrase not in mvt_zero_delta_design:
             failures.append(f"MVT degenerate-segment design must document {phrase}")
     for phrase in [
-        "## Status: In Progress",
+        "## Status: Completed",
         "Compare coordinates after the encoder's `int32` conversion",
         "Reject lines and rings that collapse below their command-count minimums",
+        "Twelve isolated hostile mutations were rejected",
+        "28213260959",
+        "28213261684",
     ]:
         if phrase not in mvt_zero_delta_plan:
             failures.append(f"MVT degenerate-segment implementation plan must preserve {phrase}")

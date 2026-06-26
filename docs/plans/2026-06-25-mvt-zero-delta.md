@@ -10,7 +10,15 @@
 
 ---
 
-## Status: In Progress
+## Status: Completed
+
+Completed on 2026-06-25. The implementation was reviewed at commit
+`ac71104f812d261b07b63864641b8c6813883b68`. Hosted Check runs `28213260959`
+and `28213262667` passed on Go 1.20.14, Go 1.25.3, and Go 1.25.11, and CodeQL
+run `28213261684` passed for actions, Go, and Python. The local Codex review
+helper selected `codex review --base origin/master` but could not authenticate
+to the OpenAI API (HTTP 401); exact-head manual review found no actionable
+findings.
 
 ### Task 1: Reproduce public failures
 
