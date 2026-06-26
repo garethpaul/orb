@@ -99,6 +99,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   zero-area bounds, such as single points or horizontal and vertical segments,
   as valid bounds.
 - Simplification skips empty polygons inside multipolygons without panicking.
+  Polygon simplification drops a polygon when its exterior ring collapses
+  below polygon validity instead of returning a two-point exterior.
 - Smart clipping rejects polygons with empty outer rings and ignores empty
   inner rings or child polygons instead of indexing malformed geometry.
 - MVT marshaling returns contextual errors for nil, empty, or too-short geometry

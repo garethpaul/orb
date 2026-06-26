@@ -82,7 +82,10 @@ func polygon(s simplifier, p orb.Polygon) orb.Polygon {
 	count := 0
 	for i := range p {
 		r := orb.Ring(runSimplify(s, orb.LineString(p[i])))
-		if i != 0 && len(r) <= 2 {
+		if len(r) <= 2 {
+			if i == 0 {
+				return p[:0]
+			}
 			continue
 		}
 
