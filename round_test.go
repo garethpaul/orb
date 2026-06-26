@@ -2,6 +2,7 @@ package orb
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -75,4 +76,49 @@ func TestRound(t *testing.T) {
 			t.Errorf("incorrect default round: %v", r)
 		}
 	})
+
+	t.Run("collection preserves nil child", func(t *testing.T) {
+		result := Round(Collection{nil, Point{0.15, -0.15}}, 10)
+		expected := Collection{nil, Point{0.2, -0.2}}
+		if !reflect.DeepEqual(result, expected) {
+			t.Fatalf("collection round = %#v, want %#v", result, expected)
+		}
+	})
+}
+
+func TestRoundZeroFactorLeavesGeometryUnchanged(t *testing.T) {
+	input := Collection{
+		nil,
+		Point{0.123456789, -0.123456789},
+		LineString{{1.23456789, -1.23456789}},
+		Bound{
+			Min: Point{-2.3456789, -3.456789},
+			Max: Point{2.3456789, 3.456789},
+		},
+	}
+	expected := Collection{
+		nil,
+		Point{0.123456789, -0.123456789},
+		LineString{{1.23456789, -1.23456789}},
+		Bound{
+			Min: Point{-2.3456789, -3.456789},
+			Max: Point{2.3456789, 3.456789},
+		},
+	}
+
+	result := Round(input, 0)
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("Round(%v, 0) = %#v, want unchanged %#v", input, result, expected)
+	}
+}
+
+func TestRoundNegativeFactorMatchesPositiveFactor(t *testing.T) {
+	negativeInput := Collection{nil, Point{0.12345, -0.12345}}
+	positiveInput := Collection{nil, Point{0.12345, -0.12345}}
+
+	result := Round(negativeInput, -1000)
+	expected := Round(positiveInput, 1000)
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("negative factor result = %#v, want positive-factor result %#v", result, expected)
+	}
 }

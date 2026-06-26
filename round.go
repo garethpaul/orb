@@ -6,15 +6,26 @@ import (
 )
 
 // Round will round all the coordinates of the geometry to the given factor.
-// The default is 6 decimal places.
+// The default is 6 decimal places. A zero factor leaves the geometry unchanged.
 func Round(g Geometry, factor ...int) Geometry {
 	if g == nil {
 		return nil
 	}
 
-	f := float64(DefaultRoundingFactor)
+	f := DefaultRoundingFactor
 	if len(factor) > 0 {
 		f = float64(factor[0])
+	}
+	if f == 0 {
+		return g
+	}
+
+	return round(g, f)
+}
+
+func round(g Geometry, f float64) Geometry {
+	if g == nil {
+		return nil
 	}
 
 	switch g := g.(type) {
@@ -73,7 +84,7 @@ func Round(g Geometry, factor ...int) Geometry {
 		}
 
 		for i := range g {
-			g[i] = Round(g[i], int(f))
+			g[i] = round(g[i], f)
 		}
 		return g
 	case Bound:

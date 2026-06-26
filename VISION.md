@@ -31,6 +31,7 @@ Priority:
 - Keep package READMEs aligned with actual APIs
 - Keep Go module metadata and dependency checksums current
 - Keep degenerate rings and malformed geometry inputs panic-resistant
+- Keep zero geometry rounding factors fail-safe and mutation-free
 - Keep MVT marshaling error-returning for invalid component sizes and encoded zero-length segments
 - Keep WKB `uint32` element-count iteration architecture-safe on 32-bit and 64-bit Go builds
 - Keep empty line strings safe in core helper methods

@@ -1,5 +1,68 @@
 # Changes
 
+## 2026-06-26T02:15:00-0700 — P1 correctness — keep zero rounding factors mutation-free
+
+### Summary
+
+Made an explicit zero factor a no-op for `Round`, preventing finite coordinates
+from becoming `NaN` while preserving the historical equivalence between
+negative factors and their positive magnitude.
+
+### Work completed
+
+- Reproduced zero-factor corruption across a nested collection containing a
+  point, line string, and bound.
+- Added exact zero-factor and negative-factor compatibility regressions.
+- Validated the factor before any slice-backed geometry mutation.
+- Routed collection recursion through one internal helper so the mutable
+  floating-point default is not converted through `int`.
+- Preserved nil collection children through the internal helper.
+- Added synchronized guidance, a completed-cycle plan, and static contracts.
+
+### Threads
+
+- None; the exported helper, test history, documentation, and current roadmap
+  were reviewed directly.
+
+### Files changed
+
+- `round.go` — pre-mutation validation and shared recursive implementation.
+- `round_test.go` — nested zero and negative factor regressions.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — public and
+  maintainer safety contract.
+- `docs/plans/2026-06-26-round-zero-factor.md` — decision record.
+- `scripts/check-baseline.py` — durable source, regression, plan, and guidance
+  contracts.
+- `CHANGES.md` — this cycle record.
+
+### Validation
+
+- RED focused root-package test on Go 1.20.14 — zero changed all coordinates to
+  `NaN`.
+- RED compatibility review test rejected the initial over-broad guard because
+  it made negative factors no-ops instead of retaining positive equivalence.
+- Focused root-package tests, all-package tests, race tests, vet, full
+  `make check`, and `go mod verify` on Go 1.20.14 and Go 1.25.11 — passed,
+  including Linux/386 WKB tests, workflow/static contracts, and Make-root
+  isolation.
+- Twelve isolated hostile source, regression, plan, and guidance mutations — all
+  rejected.
+- `python3 -m py_compile scripts/check-baseline.py` and `git diff --check` —
+  passed.
+
+### Bugs / findings
+
+- P1 correctness: an explicit zero factor silently corrupted valid geometry,
+  including nested slice-backed children, rather than failing safely.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Complete pinned-toolchain validation, exact-head review, hosted CI, and merge.
+
 ## 2026-06-26T01:24:07-0700 — P2 tests — make degenerate resampling contracts explicit
 
 ### Summary
