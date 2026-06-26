@@ -253,8 +253,14 @@ def main():
     for phrase in ["## Status: Accepted", "Do not silently drop features", "Vector Tile 2.1 specification"]:
         if phrase not in mvt_empty_design:
             failures.append(f"MVT empty-geometry design must document {phrase}")
-    if "## Status: In Progress" not in mvt_empty_plan:
-        failures.append("MVT empty-geometry implementation plan must remain in progress until hosted verification")
+    for phrase in [
+        "## Status: Completed",
+        "Twelve isolated hostile mutations were rejected",
+        "28212959729",
+        "28212962853",
+    ]:
+        if phrase not in mvt_empty_plan:
+            failures.append(f"MVT invalid-geometry implementation plan must preserve {phrase}")
     bound = read("bound.go")
     bound_tests = read("bound_test.go")
     multi_line_tests = read("multi_line_string_test.go")

@@ -47,7 +47,12 @@ return contextual errors instead of panicking or emitting invalid commands.
 - Twelve isolated hostile mutations — rejected removal or weakening of the
   encoder call, nil guard, and every top-level or nested shape minimum.
 - `git diff --check` — passed.
-- Exact-head review and hosted checks — pending.
+- Hosted Check runs `28212959729` and `28212963171` — passed on Go 1.20.14, Go
+  1.25.3, and Go 1.25.11.
+- CodeQL run `28212962853` — passed for actions, Go, and Python analysis.
+- Codex review helper with `codex review --base origin/master` — blocked by
+  local OpenAI API authentication (HTTP 401); exact-head manual review found no
+  actionable findings.
 
 ### Bugs / findings
 
@@ -59,11 +64,12 @@ return contextual errors instead of panicking or emitting invalid commands.
 
 - The host has no Go binary; pinned official Docker images provide local Go
   1.20.14 and Go 1.25.11 validation.
+- Local Codex API authentication remains unavailable; exact-head manual review
+  provided the review fallback.
 
 ### Next action
 
-- Commit and open the focused PR, run exact-head review, and merge only after
-  hosted checks pass.
+- Merge PR #22 after the final documentation-only head passes hosted checks.
 
 ## 2026-06-25T19:01:00-0700 — P1 correctness — smartclip empty geometry boundary
 

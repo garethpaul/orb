@@ -10,7 +10,15 @@
 
 ---
 
-## Status: In Progress
+## Status: Completed
+
+Completed on 2026-06-25. The implementation was reviewed at commit
+`88968004a1c36229d8a86359b75328996080c6de`. Hosted Check runs `28212959729`
+and `28212963171` passed on Go 1.20.14, Go 1.25.3, and Go 1.25.11, and CodeQL
+run `28212962853` passed for actions, Go, and Python. The local Codex review
+helper selected `codex review --base origin/master` but could not authenticate
+to the OpenAI API (HTTP 401); exact-head manual review found no actionable
+findings.
 
 ### Task 1: Reproduce public failures
 
@@ -36,3 +44,14 @@
 - Run focused and full gates on Go 1.20.14 and Go 1.25.11.
 - Review the exact branch against `origin/master`.
 - Open a focused PR and merge only after hosted checks pass.
+
+## Verification Evidence
+
+- Focused RED on Go 1.20.14 reproduced missing errors, index panics, and
+  nonconformant one-point line and two-point ring acceptance.
+- Full `make check` and `go mod verify` passed in pinned Go 1.20.14 and Go
+  1.25.11 containers, including all package tests, race tests, vet, workflow and
+  static contracts, and Make-root isolation.
+- Twelve isolated hostile mutations were rejected across the encoder call, nil
+  guard, top-level collections, nested children, and line/ring minimums.
+- Both hosted test matrices and every CodeQL analysis lane passed.
