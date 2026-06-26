@@ -31,5 +31,8 @@ enter traversal that could require enormous work or fail to progress.
 - Seven meaningful hostile mutations removing the fraction guard, lowering the
   finite boundary, removing longitude saturation, or deleting traversal and
   wrapper guards are rejected.
-- Local implementation verification is complete; review and hosted validation
-  remain landing steps before merge.
+- Three independent reviewers approved after finite-longitude, wrapper-guard,
+  documentation, and negative-saturation findings were resolved.
+- The required Codex branch review was attempted at `3ec9017` and skipped after
+  the helper failed authentication with HTTP 401.
+- Hosted validation remains the final landing step before merge.

@@ -11,7 +11,9 @@
 - Validation: RED on Go 1.20.14 reproduced infinities and NaNs; focused fraction
   and excessive-cover regressions pass. Full `make check` and `go mod verify`
   pass on Go 1.20.14 and Go 1.25.11; seven meaningful hostile mutations are
-  rejected. Review and hosted evidence follow.
+  rejected. Three independent reviewers approve after findings were resolved;
+  the required Codex review was attempted at `3ec9017` and skipped after HTTP
+  401 authentication failure. Hosted evidence follows.
 
 ## 2026-06-25T19:01:00-0700 — P1 correctness — smartclip empty geometry boundary
 
