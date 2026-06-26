@@ -58,6 +58,7 @@
 - Never commit credentials, private keys, access tokens, or machine-local secret files.
 - Mapbox Vector Tile support depends on generated protobuf code under `encoding/mvt/vectortile`; keep the `.proto`, generated `.pb.go`, and tests in sync.
 - Degenerate rings and malformed geometry inputs should fail predictably rather than panic in caller pipelines.
+- MVT marshaling must return contextual errors for nil, empty, or too-short geometry components instead of indexing them or emitting invalid command counts.
 - Empty line strings should remain safe for helper methods such as reverse.
 - Nil geometries inside collections should be ignored by aggregate helpers.
 - Empty bounds should remain identity values in bound union helpers.

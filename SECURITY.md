@@ -64,6 +64,8 @@ Empty polygons inside multipolygons should remain panic-resistant in
 simplification helpers.
 Smart clipping should reject polygons with empty outer rings and ignore empty
 inner rings or child polygons rather than indexing malformed geometry.
+MVT marshaling should return contextual errors for nil, empty, or too-short
+geometry components instead of panicking or emitting invalid commands.
 Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
 Empty interval resampling should return before allocating segment distances or

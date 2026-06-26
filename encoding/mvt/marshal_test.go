@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/paulmach/orb"
@@ -67,6 +68,49 @@ func TestMarshalMarshalGzipped_Full(t *testing.T) {
 	// compare geometry
 	xe, ye := tileEpsilon(tile)
 	compareOrbGeometry(t, result.Geometry, expected, xe, ye)
+}
+
+func TestMarshalRejectsInvalidGeometryComponents(t *testing.T) {
+	tests := []struct {
+		name     string
+		geometry orb.Geometry
+	}{
+		{name: "nil geometry", geometry: nil},
+		{name: "multipoint", geometry: orb.MultiPoint{}},
+		{name: "line string", geometry: orb.LineString{}},
+		{name: "one-point line string", geometry: orb.LineString{{1, 1}}},
+		{name: "multiline", geometry: orb.MultiLineString{}},
+		{name: "multiline child", geometry: orb.MultiLineString{nil}},
+		{name: "one-point multiline child", geometry: orb.MultiLineString{{{1, 1}}}},
+		{name: "ring", geometry: orb.Ring{}},
+		{name: "two-point ring", geometry: orb.Ring{{1, 1}, {2, 2}}},
+		{name: "polygon", geometry: orb.Polygon{}},
+		{name: "polygon ring", geometry: orb.Polygon{nil}},
+		{name: "two-point polygon ring", geometry: orb.Polygon{{{1, 1}, {2, 2}}}},
+		{name: "multipolygon", geometry: orb.MultiPolygon{}},
+		{name: "multipolygon child", geometry: orb.MultiPolygon{nil}},
+		{name: "multipolygon ring", geometry: orb.MultiPolygon{{nil}}},
+		{name: "two-point multipolygon ring", geometry: orb.MultiPolygon{{{{1, 1}, {2, 2}}}}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					t.Errorf("Marshal panicked for invalid %s: %v", test.name, recovered)
+				}
+			}()
+
+			collection := geojson.NewFeatureCollection()
+			collection.Append(geojson.NewFeature(test.geometry))
+			_, err := Marshal(Layers{NewLayer("empty", collection)})
+			if err == nil {
+				t.Errorf("Marshal should reject invalid %s", test.name)
+			} else if !strings.Contains(err.Error(), "layer empty: feature 0: error encoding geometry") {
+				t.Errorf("Marshal returned uncontextualized error for invalid %s: %v", test.name, err)
+			}
+		})
+	}
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
