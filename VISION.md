@@ -60,6 +60,8 @@ Priority:
 - Keep negative callback segment distances out of cumulative resampling geometry
 - Keep a zero callback total out of interpolation while preserving mixed
   zero-length and positive callback segments
+- Keep empty, single-point, and zero-length resampling behavior explicit in
+  public regression fixtures
 - Keep resampling callback, coordinate, progress, and output-allocation
   boundaries finite and explicitly bounded
 - Keep polygon distance indices aligned with the matching immediate ring
@@ -73,7 +75,6 @@ Next priorities:
 
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
-- Add resampling fixtures for empty, single-point, and zero-length lines
 - Add more planar containment fixtures for malformed ring and polygon inputs
 - Keep encoding packages explicit about coordinate order and projection context
 - Review benchmark coverage for geometry-heavy operations

@@ -141,6 +141,64 @@ func TestResample(t *testing.T) {
 	}
 }
 
+func TestResampleDegeneratePublicInputs(t *testing.T) {
+	panicDistance := func(orb.Point, orb.Point) float64 {
+		t.Fatal("empty Resample input must not call the distance function")
+		return 0
+	}
+	if result := Resample(orb.LineString{}, panicDistance, 4); len(result) != 0 {
+		t.Fatalf("empty Resample input should stay empty: %v", result)
+	}
+
+	single := orb.LineString{{2, 3}}
+	panicDistance = func(orb.Point, orb.Point) float64 {
+		t.Fatal("single-point Resample input must remain unchanged")
+		return 0
+	}
+	if result := Resample(single.Clone(), panicDistance, 4); !result.Equal(single) {
+		t.Fatalf("single-point Resample input changed: %v != %v", result, single)
+	}
+
+	zeroLength := orb.LineString{{5, 8}, {5, 8}, {5, 8}}
+	panicDistance = func(orb.Point, orb.Point) float64 {
+		t.Fatal("zero-length Resample input must not call the distance function")
+		return 0
+	}
+	result := Resample(zeroLength.Clone(), panicDistance, 5)
+	if len(result) != 5 {
+		t.Fatalf("zero-length Resample input must expand to the requested point count: %v", result)
+	}
+	for _, point := range result {
+		if !point.Equal(zeroLength[0]) {
+			t.Fatalf("zero-length Resample output changed coordinates: %v", result)
+		}
+	}
+}
+
+func TestToIntervalDegeneratePublicInputs(t *testing.T) {
+	panicDistance := func(orb.Point, orb.Point) float64 {
+		t.Fatal("empty ToInterval input must not call the distance function")
+		return 0
+	}
+	if result := ToInterval(orb.LineString{}, panicDistance, 1); len(result) != 0 {
+		t.Fatalf("empty ToInterval input should stay empty: %v", result)
+	}
+
+	single := orb.LineString{{2, 3}}
+	panicDistance = func(orb.Point, orb.Point) float64 {
+		t.Fatal("single-point ToInterval input must remain unchanged")
+		return 0
+	}
+	if result := ToInterval(single.Clone(), panicDistance, 1); !result.Equal(single) {
+		t.Fatalf("single-point ToInterval input changed: %v != %v", result, single)
+	}
+
+	zeroLength := orb.LineString{{5, 8}, {5, 8}, {5, 8}}
+	if result := ToInterval(zeroLength.Clone(), planar.Distance, 1); !result.Equal(zeroLength[:1]) {
+		t.Fatalf("zero-length ToInterval input must collapse to one point: %v", result)
+	}
+}
+
 func TestToInterval(t *testing.T) {
 	ls := orb.LineString{{0, 0}, {0, 1}, {0, 10}}
 

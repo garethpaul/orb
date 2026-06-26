@@ -22,6 +22,7 @@ NEGATIVE_POINT_COUNT_PLAN = "docs/plans/2026-06-15-negative-derived-point-count.
 NONFINITE_CALLBACK_PLAN = "docs/plans/2026-06-15-nonfinite-callback-distance.md"
 NEGATIVE_CALLBACK_SEGMENT_PLAN = "docs/plans/2026-06-15-negative-callback-segment-distance.md"
 ZERO_CALLBACK_TOTAL_PLAN = "docs/plans/2026-06-15-zero-callback-total.md"
+RESAMPLE_DEGENERATE_FIXTURES_PLAN = "docs/plans/2026-06-26-resample-degenerate-public-fixtures.md"
 MAPTILE_DESCENDANT_PLAN = "docs/plans/2026-06-25-maptile-descendant-boundary.md"
 SMARTCLIP_EMPTY_GEOMETRY_PLAN = "docs/plans/2026-06-25-smartclip-empty-geometry.md"
 MERCATOR_SCALE_PLAN = "docs/plans/2026-06-25-mercator-projection-scale-boundary.md"
@@ -105,6 +106,7 @@ REQUIRED = [
     NONFINITE_CALLBACK_PLAN,
     NEGATIVE_CALLBACK_SEGMENT_PLAN,
     ZERO_CALLBACK_TOTAL_PLAN,
+    RESAMPLE_DEGENERATE_FIXTURES_PLAN,
     MAPTILE_DESCENDANT_PLAN,
     SMARTCLIP_EMPTY_GEOMETRY_PLAN,
     MVT_EMPTY_GEOMETRY_DESIGN,
@@ -996,9 +998,41 @@ def main():
     for test_name in [
         "TestResampleRejectsZeroCallbackTotal",
         "TestResamplePreservesMixedZeroCallbackSegments",
+        "TestResampleDegeneratePublicInputs",
+        "TestToIntervalDegeneratePublicInputs",
     ]:
         if f"func {test_name}(" not in line_string_tests:
             failures.append(f"resample regression missing: {test_name}")
+    for phrase in [
+        "empty Resample input must not call the distance function",
+        "single-point Resample input must remain unchanged",
+        "zero-length Resample input must not call the distance function",
+        "zero-length Resample input must expand to the requested point count",
+        "empty ToInterval input must not call the distance function",
+        "single-point ToInterval input must remain unchanged",
+        "zero-length ToInterval input must collapse to one point",
+    ]:
+        if phrase not in line_string_tests:
+            failures.append(f"resample degenerate fixture missing: {phrase}")
+    resample_degenerate_plan = read(RESAMPLE_DEGENERATE_FIXTURES_PLAN)
+    resample_degenerate_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", resample_degenerate_plan
+    )
+    resample_degenerate_verification = markdown_section(
+        resample_degenerate_plan, "Verification Completed"
+    )
+    if (resample_degenerate_status != ["completed"] or
+            "Go 1.20.14" not in resample_degenerate_verification or
+            "Go 1.25.11" not in resample_degenerate_verification or
+            "make check" not in resample_degenerate_verification or
+            "go mod verify" not in resample_degenerate_verification or
+            "Fourteen isolated hostile mutations were rejected" not in resample_degenerate_verification or
+            re.search(r"(?i)\b(?:pending|todo|tbd|not run|to be recorded)\b",
+                      resample_degenerate_verification)):
+        failures.append("resample degenerate fixture plan must record completed verification")
+    for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if "empty, single-point, and zero-length resampling" not in read(path).lower():
+            failures.append(f"{path} must document degenerate resampling fixtures")
     zero_callback_total_plan = read(ZERO_CALLBACK_TOTAL_PLAN)
     zero_callback_total_status = re.findall(
         r"(?mi)^status:\s*(.+?)\s*$", zero_callback_total_plan

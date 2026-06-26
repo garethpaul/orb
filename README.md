@@ -82,6 +82,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   fail closed before dispatch or traversal.
 - `resample.Resample` rejects an all-zero callback total before interpolation,
   while preserving mixed zero-length and positive callback segments.
+- Public fixtures preserve empty, single-point, and zero-length resampling
+  behavior for both `resample.Resample` and `resample.ToInterval`.
 - `make lint`, `make build`, and `make verify` are stable aliases for the Go
   vet, build-through-test, and full verification gates.
 - Standard Make aliases resolve Go and checker paths from `Makefile`, so an
