@@ -93,6 +93,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `LineString.Reverse` handles empty line strings without panicking.
 - `Collection.Dimensions` skips nil geometries and keeps all-nil collections at
   the same empty dimension result.
+- `Collection.Bound` treats leading empty geometries as aggregate identities
+  and includes bounds from nested geometry collections.
 - `Bound.Union` treats empty receiver bounds and empty union arguments as
   identity values so aggregate bounds do not inherit the empty bound sentinel.
 - `Bound.IsEmpty` treats malformed negative bounds as empty while preserving

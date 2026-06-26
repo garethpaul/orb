@@ -35,6 +35,8 @@ Priority:
 - Keep WKB `uint32` element-count iteration architecture-safe on 32-bit and 64-bit Go builds
 - Keep empty line strings safe in core helper methods
 - Keep nil geometries in collections safe for aggregate helpers
+- Keep leading empty and nested geometry groups safe in collection bound
+  aggregation
 - Keep empty bounds and empty union arguments safe as identity values in
   aggregate helpers
 - Keep zero-area bounds valid and distinct from malformed negative bounds
@@ -71,7 +73,6 @@ Next priorities:
 - Add regression fixtures for edge cases in clipping and simplification
 - Add more edge-case fixtures for empty and degenerate core geometries
 - Add resampling fixtures for empty, single-point, and zero-length lines
-- Add aggregate-bound fixtures for leading empty polygons and geometry groups
 - Add more planar containment fixtures for malformed ring and polygon inputs
 - Keep encoding packages explicit about coordinate order and projection context
 - Review benchmark coverage for geometry-heavy operations

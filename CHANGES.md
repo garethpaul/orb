@@ -1,5 +1,59 @@
 # Changes
 
+## 2026-06-25T23:56:28-0700 — P2 coverage — add collection bound fixtures
+
+### Summary
+
+Added direct public regressions proving `Collection.Bound` preserves non-empty
+bounds when collections begin with empty geometry or contain nested geometry
+groups.
+
+### Work completed
+
+- Covered a leading empty line string followed by a non-empty polygon.
+- Covered nested collections containing empty geometry, a multipolygon with a
+  leading empty polygon, a nil child, and a point.
+- Documented the aggregate identity and nested-union contract.
+- Added fail-closed static checks and completed the aggregate-bound fixture
+  roadmap item.
+- Kept production source unchanged because the existing implementation already
+  satisfies both contracts.
+
+### Threads
+
+- None; the public helper and existing aggregate-bound contracts were reviewed
+  directly.
+
+### Files changed
+
+- `geometry_test.go` — leading-empty and nested-group regressions.
+- `README.md` and `VISION.md` — public contract and roadmap state.
+- `docs/plans/2026-06-26-collection-bound-fixtures.md` — scope and evidence.
+- `scripts/check-baseline.py` — durable fixture and documentation contracts.
+- `CHANGES.md` — this cycle record.
+
+### Validation
+
+- Focused root-package tests on Go 1.20.14 and Go 1.25.11 — passed.
+- Full `make check` and `go mod verify` on Go 1.20.14 and Go 1.25.11 — passed,
+  including all packages, Linux/386 WKB tests, race tests, vet, workflow/static
+  contracts, and Make-root isolation.
+- Five hostile fixture-contract mutations — all rejected.
+- `git diff --check` — passed.
+
+### Bugs / findings
+
+- P2 coverage: nested collection bounds and leading empty collection children
+  relied on indirect empty-bound identity behavior without focused regressions.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Add regression fixtures for clipping and simplification edge cases.
+
 ## 2026-06-26T04:23:59Z — P1 correctness — drop collapsed simplified polygons
 
 ### Summary
