@@ -17,15 +17,17 @@
 - Validation: RED on Go 1.20.14 returned `map[]` for both variants. Focused GREEN,
   static baseline, and complete `make check` gates pass on Go 1.20.14 and Go
   1.25.11; four hostile mutations removing either minimum guard, excessive-zoom
-  rejection, or mixed-zoom rejection are rejected.
+  rejection, or mixed-zoom rejection are rejected. Three independent reviewers
+  approve, and both hosted Go matrices plus all CodeQL lanes pass at `710fcc2`.
 - Findings: a merge target numerically above the source zoom requires subdivision,
   not merging, so identity is the only contract-compatible result. Unsupported
   mixed-zoom sets must also fail closed before unordered iteration reaches an
   unrepresentable sibling lookup.
 - Blockers: the host has no Go binary, so validation uses pinned official Docker
   images; initial network-isolated runs found cold module caches and full gates
-  then passed with dependency access.
-- Next: complete independent review, exact-head Codex review, hosted CI, and merge.
+  then passed with dependency access. The required Codex review helper was
+  attempted and skipped after an HTTP 401 authentication failure.
+- Next: merge the clean pull request after final documentation-only checks pass.
 
 ## 2026-06-25T16:12:08-0700 — P1 correctness — cycle: maptile descendant ceiling
 

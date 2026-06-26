@@ -2,7 +2,7 @@
 title: Tile-Cover Minimum Boundary
 date: 2026-06-25
 type: implementation-plan
-status: in-progress
+status: completed
 ---
 
 # Tile-Cover Minimum Boundary
@@ -37,5 +37,9 @@ zero times, and both functions returned a newly allocated empty set.
   vet, workflow contracts, the static baseline, and Make authority tests.
 - Four hostile mutations reverting either minimum guard, excessive-zoom
   rejection, or mixed-zoom rejection are rejected by focused regressions.
-- Independent implementation review, exact-head Codex review, and hosted CI are
-  pending before merge.
+- Three independent correctness, maintainability, and security reviews approve
+  the expanded implementation with no remaining actionable findings.
+- The Codex review helper was attempted against `origin/master` at `710fcc2` but
+  skipped after the configured service returned HTTP 401 authentication errors.
+- Both hosted test workflows passed on Go 1.20.14, Go 1.25.3, and Go 1.25.11;
+  the actions, Go, and Python CodeQL analyses also passed at `710fcc2`.
