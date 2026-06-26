@@ -90,6 +90,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   zero-area bounds, such as single points or horizontal and vertical segments,
   as valid bounds.
 - Simplification skips empty polygons inside multipolygons without panicking.
+- Smart clipping rejects polygons with empty outer rings and ignores empty
+  inner rings or child polygons instead of indexing malformed geometry.
 - `MultiPolygon.Bound` keeps leading empty polygons from leaking empty-bound
   sentinels into aggregate bounds.
 - Empty interval resampling returns empty line strings before distance

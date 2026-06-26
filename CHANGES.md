@@ -1,5 +1,62 @@
 # Changes
 
+## 2026-06-25T19:01:00-0700 — P1 correctness — smartclip empty geometry boundary
+
+### Summary
+
+Inspected all local open-source checkouts, avoided conflicting with concurrent
+Dotfiles work, and fixed a reproducible Orb smart-clipping panic on malformed
+empty polygon children.
+
+### Work completed
+
+- Rejected polygons whose outer ring is empty instead of indexing or promoting
+  a later ring.
+- Ignored empty inner rings and invalid multipolygon children while preserving
+  valid sibling geometry.
+- Added focused Go regressions, a completed implementation plan, public safety
+  documentation, and mutation-sensitive static baseline checks.
+
+### Threads
+
+- Started: none.
+- Continued: direct Orb malformed-geometry hardening.
+- Stopped: Dotfiles supply-chain inspection after another process changed the
+  shared checkout, avoiding duplicate or conflicting edits.
+
+### Files changed
+
+- `clip/smartclip/smart.go` — normalized polygon inputs before clipping.
+- `clip/smartclip/smart_test.go` — covered empty outer, inner, and child geometry.
+- `scripts/check-baseline.py` — preserved the new panic-resistance contract.
+- `README.md`, `SECURITY.md`, `VISION.md` — documented malformed-input behavior.
+- `docs/plans/2026-06-25-smartclip-empty-geometry.md` — recorded requirements and proof.
+
+### Validation
+
+- RED on Go 1.20.14 — reproduced index-out-of-range panics in all three focused cases.
+- `go test ./clip/smartclip -count=1` on Go 1.20.14 — passed.
+- `make check` on Go 1.20.14 — passed tests, race, vet, workflow, static, and root gates.
+- `make check` on Go 1.25.11 — passed tests, race, vet, workflow, static, and root gates.
+- Codex review helper against `origin/master` — skipped after repeated HTTP 401
+  authentication failures; no review finding was produced.
+- Hosted test lanes on Go 1.20.14, Go 1.25.3, and Go 1.25.11 — passed before
+  this documentation-only evidence update.
+
+### Bugs / findings
+
+- P1: Smartclip indexed empty rings and empty child polygons before validation,
+  allowing malformed geometry to panic caller pipelines.
+
+### Blockers
+
+- Codex review authentication is unavailable in this environment; skipped per
+  the maintenance policy. This does not block hosted checks or merge.
+
+### Next action
+
+- Merge the focused pull request after this documentation-only update passes hosted checks.
+
 ## 2026-06-25T18:01:05-0700 — P1 correctness — cycle: tile-cover minimum boundary
 
 - Cycle: inspected the public geometry library, recent merge work, hosted checks,
