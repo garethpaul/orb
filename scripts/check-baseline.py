@@ -36,6 +36,7 @@ SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN = "docs/plans/2026-06-26-simplify-collapsed-e
 SIMPLIFY_COLLAPSED_EXTERIOR_PLAN = "docs/plans/2026-06-26-simplify-collapsed-exterior.md"
 COLLECTION_BOUND_FIXTURES_PLAN = "docs/plans/2026-06-26-collection-bound-fixtures.md"
 COLLECTION_CLIP_FIXTURE_PLAN = "docs/plans/2026-06-26-collection-clip-fixture.md"
+SIMPLIFY_COLLECTION_COMPACTION_PLAN = "docs/plans/2026-06-26-simplify-collection-compaction.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -116,6 +117,7 @@ REQUIRED = [
     SIMPLIFY_COLLAPSED_EXTERIOR_PLAN,
     COLLECTION_BOUND_FIXTURES_PLAN,
     COLLECTION_CLIP_FIXTURE_PLAN,
+    SIMPLIFY_COLLECTION_COMPACTION_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -555,6 +557,38 @@ def main():
         failures.append("simplify multiPolygon must skip empty polygons before indexing")
     if "TestMultiPolygonSkipsEmptyPolygon" not in simplify_tests:
         failures.append("simplify tests must cover empty polygons inside multipolygons")
+    collection_helper = simplify_helpers.split("func collection", 1)[1].split(
+        "func runSimplify", 1
+    )[0]
+    for phrase in ["count := 0", "if g == nil", "c[count] = g", "return c[:count]"]:
+        if phrase not in collection_helper:
+            failures.append(f"simplify collection must compact collapsed children: {phrase}")
+    for test_name in [
+        "TestCollectionSkipsCollapsedGeometries",
+        "TestSimplifyCollectionReturnsNilWhenAllChildrenCollapse",
+    ]:
+        if test_name not in simplify_tests:
+            failures.append(f"simplify collection regression missing: {test_name}")
+    simplify_collection_plan = read(SIMPLIFY_COLLECTION_COMPACTION_PLAN)
+    for phrase in [
+        "Status: Completed",
+        "[<nil> <nil> [5 6]]",
+        "compact surviving geometries in place",
+        "fully collapsed collection",
+        "Ten isolated hostile mutations were rejected",
+        "Go 1.20.14 and Go 1.25.11",
+    ]:
+        if phrase not in simplify_collection_plan:
+            failures.append(f"simplify collection plan must preserve {phrase}")
+    simplify_collection_guidance = {
+        "README.md": "Collection simplification removes nil and collapsed children in place",
+        "SECURITY.md": "Collection simplification should remove nil and collapsed children",
+        "VISION.md": "Remove nil and collapsed children from simplified geometry collections",
+        "AGENTS.md": "Collection simplification must compact nil and collapsed children",
+    }
+    for path, phrase in simplify_collection_guidance.items():
+        if phrase not in read(path):
+            failures.append(f"{path} must preserve simplified collection compaction guidance")
     polygon_helper = simplify_helpers.split("func polygon", 1)[1].split(
         "func multiPolygon", 1
     )[0]

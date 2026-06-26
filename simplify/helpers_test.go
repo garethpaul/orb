@@ -71,3 +71,28 @@ func TestMultiPolygonSkipsEmptyPolygon(t *testing.T) {
 		t.Errorf("should skip empty polygon without panicking")
 	}
 }
+
+func TestCollectionSkipsCollapsedGeometries(t *testing.T) {
+	collection := orb.Collection{
+		nil,
+		orb.Polygon{{{0, 0}, {2, 0}, {2, 2}, {0, 2}, {0, 0}}},
+		orb.Point{5, 6},
+	}
+
+	result := DouglasPeucker(100).Collection(collection)
+	expected := orb.Collection{orb.Point{5, 6}}
+	if !result.Equal(expected) {
+		t.Fatalf("collection should remove collapsed children: %v != %v", result, expected)
+	}
+}
+
+func TestSimplifyCollectionReturnsNilWhenAllChildrenCollapse(t *testing.T) {
+	collection := orb.Collection{
+		nil,
+		orb.Polygon{{{0, 0}, {2, 0}, {2, 2}, {0, 2}, {0, 0}}},
+	}
+
+	if result := DouglasPeucker(100).Simplify(collection); result != nil {
+		t.Fatalf("fully collapsed collection should simplify to nil: %v", result)
+	}
+}

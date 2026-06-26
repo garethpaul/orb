@@ -74,6 +74,8 @@ high-bit counts cannot truncate through architecture-sized `int` and bypass
 payload reads on 32-bit builds.
 Leading empty polygons should remain safe in multipolygon bound aggregation so
 aggregate bounds do not leak malformed empty-bound sentinels.
+Collection simplification should remove nil and collapsed children so callers
+do not receive stale nil geometry slots after validating the simplified result.
 Empty interval resampling should return before allocating segment distances or
 calling caller-provided distance functions.
 Non-finite interval distances should be rejected before distance callbacks or
