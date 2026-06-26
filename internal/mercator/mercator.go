@@ -2,6 +2,8 @@ package mercator
 
 import "math"
 
+const maxFiniteLevel = 1023
+
 // for testing
 var (
 	Epsilon = 1e-6
@@ -28,7 +30,7 @@ var (
 
 // ToPlanar converts the point to geo world coordinates at the given live.
 func ToPlanar(lng, lat float64, level uint32) (x, y float64) {
-	maxtiles := math.Exp2(float64(level))
+	maxtiles := scale(level)
 	x = (lng/360.0 + 0.5) * maxtiles
 
 	// bound it because we have a top of the world problem
@@ -48,10 +50,18 @@ func ToPlanar(lng, lat float64, level uint32) (x, y float64) {
 
 // ToGeo projects world coordinates back to geo coordinates.
 func ToGeo(x, y float64, level uint32) (lng, lat float64) {
-	maxtiles := math.Exp2(float64(level))
+	maxtiles := scale(level)
 
 	lng = 360.0 * (x/maxtiles - 0.5)
 	lat = 2.0*math.Atan(math.Exp(math.Pi-(2*math.Pi)*(y/maxtiles)))*(180.0/math.Pi) - 90.0
 
 	return lng, lat
+}
+
+func scale(level uint32) float64 {
+	if level > maxFiniteLevel {
+		level = maxFiniteLevel
+	}
+
+	return math.Exp2(float64(level))
 }

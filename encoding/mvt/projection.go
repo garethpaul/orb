@@ -15,13 +15,17 @@ type projection struct {
 }
 
 func newProjection(tile maptile.Tile, extent uint32) *projection {
+	if extent == 0 {
+		extent = DefaultExtent
+	}
+
 	if isPowerOfTwo(extent) {
 		// powers of two extents allows for some more simplicity
 		n := uint32(bits.TrailingZeros32(extent))
 		z := uint32(tile.Z) + n
 
-		minx := float64(tile.X << n)
-		miny := float64(tile.Y << n)
+		minx := math.Ldexp(float64(tile.X), int(n))
+		miny := math.Ldexp(float64(tile.Y), int(n))
 		return &projection{
 			ToTile: func(p orb.Point) orb.Point {
 				x, y := mercator.ToPlanar(p[0], p[1], z)
@@ -64,5 +68,5 @@ func nonPowerOfTwoProjection(tile maptile.Tile, extent uint32) *projection {
 }
 
 func isPowerOfTwo(n uint32) bool {
-	return (n & (n - 1)) == 0
+	return n != 0 && (n&(n-1)) == 0
 }
