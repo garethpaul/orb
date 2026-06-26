@@ -61,6 +61,8 @@
 - MVT marshaling must return contextual errors for nil, empty, or too-short geometry components instead of indexing them or emitting invalid command counts.
 - MVT line and ring validation must compare encoded integer coordinates so duplicate or quantized vertices cannot emit zero-length `LineTo` or `ClosePath` segments.
 - Empty line strings should remain safe for helper methods such as reverse.
+- Polygon simplification must drop a polygon when its exterior ring collapses
+  below the minimum usable boundary instead of returning a degenerate polygon.
 - Nil geometries inside collections should be ignored by aggregate helpers.
 - Empty bounds should remain identity values in bound union helpers.
 - Empty line strings passed to interval resampling must return before invoking caller-provided distance functions.

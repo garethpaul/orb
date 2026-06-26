@@ -39,6 +39,7 @@ Priority:
   aggregate helpers
 - Keep zero-area bounds valid and distinct from malformed negative bounds
 - Keep empty polygons inside multipolygons safe in simplification helpers
+- Drop polygons whose simplified exterior ring collapses below polygon validity
 - Keep empty rings and child polygons safe in smart clipping helpers
 - Keep leading empty polygons safe in multipolygon bound aggregation
 - Keep empty rings and polygons safe in planar containment helpers

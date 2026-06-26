@@ -1,5 +1,60 @@
 # Changes
 
+## 2026-06-26T04:23:59Z — P1 correctness — drop collapsed simplified polygons
+
+### Summary
+
+Fixed direct polygon simplification so a collapsed exterior ring produces an
+empty polygon instead of an invalid two-point exterior.
+
+### Work completed
+
+- Reproduced a closed square simplifying to `[[[0 0] [0 0]]]` through the
+  public `Polygon` helper while `MultiPolygon` dropped the same geometry.
+- Added public regressions for the collapsed exterior ring and for preventing
+  a surviving interior ring from being promoted to exterior ownership.
+- Made the shared polygon helper return empty when ring zero simplifies to two
+  or fewer points while preserving interior-ring compaction.
+- Added design, implementation, static, and public guidance contracts.
+
+### Threads
+
+- None; the focused bug was investigated, implemented, and reviewed directly.
+
+### Files changed
+
+- `simplify/helpers.go` — rejects collapsed simplified exteriors.
+- `simplify/helpers_test.go` — covers the public polygon regression.
+- `scripts/check-baseline.py` — preserves source, test, plan, and guidance contracts.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — document the boundary.
+- `docs/plans/2026-06-26-simplify-collapsed-exterior*.md` — record design and execution.
+- `docs/fixes/2026-06-26-simplify-collapsed-exterior.md` — record diagnosis and closeout.
+
+### Validation
+
+- RED: Go 1.20.14 returned a two-point exterior ring.
+- GREEN: focused and full `simplify` package tests pass on Go 1.20.14 and Go 1.25.11.
+- Static documentation contract failed before guidance synchronization, then passed.
+- Full `make check` and `go mod verify` pass on Go 1.20.14 and Go 1.25.11,
+  including all packages, Linux/386 WKB tests, race tests, vet, workflow
+  contracts, static contracts, and Make-root isolation.
+- Three hostile mutations were rejected: weakening the exterior guard,
+  removing interior-ownership regression evidence, and marking the plan incomplete.
+- Direct correctness, quality, and security review found no actionable issue.
+
+### Bugs / findings
+
+- P1: direct `Polygon` and `MultiPolygon` simplification disagreed on whether a
+  polygon with a collapsed exterior remained valid.
+
+### Blockers
+
+- None.
+
+### Next action
+
+- Run full pinned gates, hostile mutations, exact-head review, hosted CI, and merge.
+
 ## 2026-06-26T04:12:21Z — P1 correctness/security — architecture-safe WKB counts
 
 ### Summary

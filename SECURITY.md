@@ -62,6 +62,8 @@ Zero-area bounds should remain valid so point and segment extents are not
 misclassified as malformed empty bounds.
 Empty polygons inside multipolygons should remain panic-resistant in
 simplification helpers.
+Simplification must not return polygons whose exterior ring collapses below
+the minimum usable polygon boundary.
 Smart clipping should reject polygons with empty outer rings and ignore empty
 inner rings or child polygons rather than indexing malformed geometry.
 MVT marshaling should return contextual errors for nil, empty, or too-short

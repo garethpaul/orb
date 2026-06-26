@@ -32,6 +32,8 @@ MVT_ZERO_DELTA_DESIGN = "docs/plans/2026-06-25-mvt-zero-delta-design.md"
 MVT_ZERO_DELTA_PLAN = "docs/plans/2026-06-25-mvt-zero-delta.md"
 WKB_UINT32_COUNT_DESIGN = "docs/plans/2026-06-26-wkb-uint32-count-loops-design.md"
 WKB_UINT32_COUNT_PLAN = "docs/plans/2026-06-26-wkb-uint32-count-loops.md"
+SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN = "docs/plans/2026-06-26-simplify-collapsed-exterior-design.md"
+SIMPLIFY_COLLAPSED_EXTERIOR_PLAN = "docs/plans/2026-06-26-simplify-collapsed-exterior.md"
 EXPECTED_CHECK_WORKFLOW = """name: Check
 on:
   pull_request:
@@ -108,6 +110,8 @@ REQUIRED = [
     MVT_ZERO_DELTA_PLAN,
     WKB_UINT32_COUNT_DESIGN,
     WKB_UINT32_COUNT_PLAN,
+    SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN,
+    SIMPLIFY_COLLAPSED_EXTERIOR_PLAN,
     "scripts/check-baseline.py",
     "tests/test_makefile_root.py",
     "tests/test_workflow_contract.py",
@@ -499,6 +503,23 @@ def main():
         failures.append("simplify multiPolygon must skip empty polygons before indexing")
     if "TestMultiPolygonSkipsEmptyPolygon" not in simplify_tests:
         failures.append("simplify tests must cover empty polygons inside multipolygons")
+    polygon_helper = simplify_helpers.split("func polygon", 1)[1].split(
+        "func multiPolygon", 1
+    )[0]
+    for phrase in ["if len(r) <= 2", "if i == 0", "return p[:0]"]:
+        if phrase not in polygon_helper:
+            failures.append(
+                f"simplify polygon must drop a collapsed exterior ring: {phrase}"
+            )
+    for test_name in [
+        "TestPolygonSkipsCollapsedExteriorRing",
+        "TestPolygonDoesNotPromoteInteriorRing",
+    ]:
+        if test_name not in simplify_tests:
+            failures.append(
+                "simplify tests must cover collapsed polygon exteriors: "
+                + test_name
+            )
     tile_source = read("maptile/tile.go")
     tile_tests = read("maptile/tile_test.go")
     tile_merge_tests = read("maptile/tilecover/merge_test.go")
@@ -633,6 +654,38 @@ def main():
             failures.append(
                 f"{path} must document the non-finite interval distance boundary"
             )
+
+    simplify_exterior_guidance = {
+        "README.md": "Polygon simplification drops a polygon when its exterior ring collapses",
+        "SECURITY.md": "Simplification must not return polygons whose exterior ring collapses",
+        "VISION.md": "Drop polygons whose simplified exterior ring collapses below polygon validity",
+        "AGENTS.md": "Polygon simplification must drop a polygon when its exterior ring collapses",
+        "CHANGES.md": "collapsed exterior ring",
+    }
+    for path, phrase in simplify_exterior_guidance.items():
+        if phrase not in read(path):
+            failures.append(f"{path} must document collapsed polygon simplification")
+
+    simplify_exterior_design = read(SIMPLIFY_COLLAPSED_EXTERIOR_DESIGN)
+    for phrase in [
+        "## Status: Accepted",
+        "Return an empty polygon when its simplified exterior has two or fewer points",
+        "MultiPolygon",
+    ]:
+        if phrase not in simplify_exterior_design:
+            failures.append(f"simplify exterior design must record {phrase}")
+
+    simplify_exterior_plan = read(SIMPLIFY_COLLAPSED_EXTERIOR_PLAN)
+    for phrase in [
+        "## Status: Completed",
+        "TestPolygonSkipsCollapsedExteriorRing",
+        "RED: Go 1.20.14",
+        "GOTOOLCHAIN=go1.20.14 make check",
+        "GOTOOLCHAIN=go1.25.11 make check",
+        "hostile mutations",
+    ]:
+        if phrase not in simplify_exterior_plan:
+            failures.append(f"simplify exterior plan must record {phrase}")
 
     go_support = " ".join(read("docs/go-support.md").split())
     for phrase in [
