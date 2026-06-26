@@ -1,5 +1,32 @@
 # Changes
 
+## 2026-06-25T18:01:05-0700 — P1 correctness — cycle: tile-cover minimum boundary
+
+- Cycle: inspected the public geometry library, recent merge work, hosted checks,
+  repository contracts, callers, tests, plans, and documented boundary risks.
+- Threads: continued direct tile-cover boundary hardening; started or stopped none.
+- Bug: `MergeUp` and `MergeUpPartial` returned an empty set when the requested
+  minimum zoom exceeded the uniform input zoom because their loops performed no
+  work after an equality-only no-op guard.
+- Work: made both variants preserve the original set whenever `min >= inputZoom`,
+  centralized uniform representable-zoom validation before sibling indexing,
+  added complete and partial regressions, and extended the static test contract.
+- Files: changed `maptile/tilecover/merge.go`,
+  `maptile/tilecover/merge_test.go`, `scripts/check-baseline.py`, and added the
+  tile-cover minimum-boundary implementation plan.
+- Validation: RED on Go 1.20.14 returned `map[]` for both variants. Focused GREEN,
+  static baseline, and complete `make check` gates pass on Go 1.20.14 and Go
+  1.25.11; four hostile mutations removing either minimum guard, excessive-zoom
+  rejection, or mixed-zoom rejection are rejected.
+- Findings: a merge target numerically above the source zoom requires subdivision,
+  not merging, so identity is the only contract-compatible result. Unsupported
+  mixed-zoom sets must also fail closed before unordered iteration reaches an
+  unrepresentable sibling lookup.
+- Blockers: the host has no Go binary, so validation uses pinned official Docker
+  images; initial network-isolated runs found cold module caches and full gates
+  then passed with dependency access.
+- Next: complete independent review, exact-head Codex review, hosted CI, and merge.
+
 ## 2026-06-25T16:12:08-0700 — P1 correctness — cycle: maptile descendant ceiling
 
 - Cycle: inspected the MIT-licensed geometry library, open work, hosted checks,

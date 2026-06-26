@@ -61,6 +61,69 @@ func TestMergeUpAboveMaximumZoom(t *testing.T) {
 	}
 }
 
+func TestMergeUpPreservesSetWhenMinimumExceedsInputZoom(t *testing.T) {
+	tile := maptile.New(1, 1, 2)
+
+	for _, merge := range []struct {
+		name string
+		fn   func(maptile.Set) maptile.Set
+	}{
+		{name: "complete", fn: func(set maptile.Set) maptile.Set { return MergeUp(set, 3) }},
+		{name: "partial", fn: func(set maptile.Set) maptile.Set { return MergeUpPartial(set, 3, 4) }},
+	} {
+		t.Run(merge.name, func(t *testing.T) {
+			result := merge.fn(maptile.Set{tile: true})
+			if len(result) != 1 || !result[tile] {
+				t.Fatalf("minimum above input zoom must preserve the tile: %v", result)
+			}
+		})
+	}
+}
+
+func TestMergeUpPreservesNonuniformZoomSets(t *testing.T) {
+	sets := []struct {
+		name string
+		set  maptile.Set
+	}{
+		{
+			name: "mixed representable zooms",
+			set: maptile.Set{
+				maptile.New(1, 1, 2): true,
+				maptile.New(2, 2, 3): true,
+			},
+		},
+		{
+			name: "mixed representable and excessive zooms",
+			set: maptile.Set{
+				maptile.New(1, 1, 2):                 true,
+				{Z: maptile.MaxZoom + 1, X: 1, Y: 1}: true,
+			},
+		},
+	}
+
+	for _, input := range sets {
+		for _, merge := range []struct {
+			name string
+			fn   func(maptile.Set) maptile.Set
+		}{
+			{name: "complete", fn: func(set maptile.Set) maptile.Set { return MergeUp(set, 0) }},
+			{name: "partial", fn: func(set maptile.Set) maptile.Set { return MergeUpPartial(set, 0, 4) }},
+		} {
+			t.Run(input.name+"/"+merge.name, func(t *testing.T) {
+				result := merge.fn(cloneSet(input.set))
+				if len(result) != len(input.set) {
+					t.Fatalf("nonuniform zoom set must remain unchanged: %v", result)
+				}
+				for tile := range input.set {
+					if !result[tile] {
+						t.Fatalf("nonuniform zoom set lost tile %v: %v", tile, result)
+					}
+				}
+			})
+		}
+	}
+}
+
 func BenchmarkMergeUp_z0z10(b *testing.B) {
 	g := loadFeature(b, "./testdata/russia.geojson").Geometry
 	tiles := Geometry(g, 10)
