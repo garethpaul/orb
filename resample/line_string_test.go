@@ -3,6 +3,7 @@ package resample
 import (
 	"math"
 	"math/rand"
+	"reflect"
 	"testing"
 
 	"github.com/paulmach/orb"
@@ -422,5 +423,47 @@ func TestLineStringResampleEdgeCases(t *testing.T) {
 	ls, _ = resampleEdgeCases(ls, 5)
 	if l := len(ls); l != 5 {
 		t.Errorf("should shorten if necessary: %v != 5", l)
+	}
+}
+
+// TestResampleAllocationBoundIsEffective asserts the resample point cap in the
+// units it exists to bound: bytes. maxResamplePoints is derived, so pinning the
+// spelling of maxResampleAllocationBytes proves nothing about the effective
+// bound; bytesPerPoint or the derivation can widen it while every pinned
+// literal stays byte-identical. Anchor the assertions to the true size of
+// orb.Point and to the declared byte budget instead of to the derived cap, so
+// they cannot grow along with a widened bound.
+func TestResampleAllocationBoundIsEffective(t *testing.T) {
+	truePointSize := int(reflect.TypeOf(orb.Point{}).Size())
+
+	if bytesPerPoint != truePointSize {
+		t.Fatalf(
+			"bytesPerPoint = %d must equal the real size of orb.Point (%d bytes); the allocation budget is meaningless otherwise",
+			bytesPerPoint, truePointSize,
+		)
+	}
+
+	if got := maxResamplePoints * truePointSize; got > maxResampleAllocationBytes {
+		t.Fatalf(
+			"effective cap allows %d bytes (%d points x %d), exceeding the declared budget of %d bytes",
+			got, maxResamplePoints, truePointSize, maxResampleAllocationBytes,
+		)
+	}
+
+	// Behavioural boundary, anchored to the declared byte budget rather than to
+	// maxResamplePoints: a request that would allocate past the budget must be
+	// gated, and one inside the budget must not be gated by the cap.
+	overBudget := maxResampleAllocationBytes/truePointSize + 1
+	line := orb.LineString{{0, 0}, {1, 0}}
+
+	if result := Resample(line.Clone(), planar.Distance, overBudget); result != nil {
+		t.Fatalf(
+			"point count %d allocates past the %d-byte budget and must be rejected; got %d points",
+			overBudget, maxResampleAllocationBytes, len(result),
+		)
+	}
+
+	if result := Resample(line.Clone(), planar.Distance, 3); result == nil {
+		t.Fatal("a point count well inside the budget must not be rejected by the allocation cap")
 	}
 }

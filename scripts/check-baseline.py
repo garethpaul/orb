@@ -529,6 +529,7 @@ def main():
     for phrase in [
         "TestResampleRejectsNilDistanceFunction",
         "TestResampleRejectsUnboundedPointCount",
+        "TestResampleAllocationBoundIsEffective",
         "TestResampleRejectsUnderflowedSpacing",
         "TestResampleKeepsFiniteCoordinatesFinite",
         "TestResampleStraightLineProperties",
